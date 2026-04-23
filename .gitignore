@@ -10,7 +10,7 @@ CLAUDE.local.md
 *~
 
 # Binaries
-conductor
+/conductor
 *.exe
 *.exe~
 *.dll
