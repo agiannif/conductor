@@ -53,6 +53,9 @@ func (d *DB) GetUserByID(id int64) (models.User, string, error) {
 	err := d.sql.QueryRow(
 		`SELECT id, username, password_hash, created_at FROM users WHERE id = ?`, id,
 	).Scan(&u.ID, &u.Username, &hash, &u.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return u, "", fmt.Errorf("user not found")
+	}
 	return u, hash, err
 }
 
@@ -141,7 +144,7 @@ func (d *DB) CreateProject(name, description string) (int64, error) {
 		name, description,
 	)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("CreateProject: %w", err)
 	}
 	return res.LastInsertId()
 }
@@ -157,6 +160,9 @@ func (d *DB) GetProject(id int64) (models.Project, error) {
 		WHERE p.id = ?
 		GROUP BY p.id
 	`, id).Scan(&p.ID, &p.Name, &p.Description, &p.CreatedAt, &p.TotalTasks, &p.DoneTasks)
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, fmt.Errorf("project not found")
+	}
 	return p, err
 }
 
@@ -275,6 +281,9 @@ func (d *DB) GetTask(id int64) (models.Task, error) {
 		&createdBy, &createdByName,
 		&t.CreatedAt, &t.UpdatedAt,
 	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return t, fmt.Errorf("task not found")
+	}
 	if err != nil {
 		return t, err
 	}
@@ -404,6 +413,9 @@ func (d *DB) DeleteTask(id int64) error {
 	return err
 }
 
+// ToggleTask flips a task between done and todo. Any non-done status (todo,
+// in progress, blocked) becomes done; done becomes todo. This is intentionally
+// lossy — a task that was "in progress" will be "todo" after un-toggling.
 func (d *DB) ToggleTask(id int64) error {
 	_, err := d.sql.Exec(`
 		UPDATE tasks SET status = CASE

@@ -22,15 +22,6 @@ const (
 	PriorityLow      Priority = "low"
 )
 
-// PriorityOrder returns a SQL CASE expression fragment for ordering by priority.
-const PriorityOrder = `CASE priority
-	WHEN 'critical' THEN 1
-	WHEN 'high'     THEN 2
-	WHEN 'medium'   THEN 3
-	WHEN 'low'      THEN 4
-	ELSE 5
-END`
-
 type User struct {
 	ID        int64
 	Username  string
