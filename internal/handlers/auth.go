@@ -15,18 +15,19 @@ type Handler struct {
 	db           *db.DB
 	secureCookie bool
 	staticFS     embed.FS
+	mux          *http.ServeMux
 }
 
 // New creates a Handler and registers all routes on a new ServeMux.
 func New(database *db.DB, secureCookie bool, staticFS embed.FS) *Handler {
 	h := &Handler{db: database, secureCookie: secureCookie, staticFS: staticFS}
+	h.mux = h.routes()
 	return h
 }
 
-// ServeHTTP implements http.Handler by routing to the registered mux.
+// ServeHTTP implements http.Handler.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	mux := h.routes()
-	mux.ServeHTTP(w, r)
+	h.mux.ServeHTTP(w, r)
 }
 
 // routes registers all application routes on a new ServeMux.
