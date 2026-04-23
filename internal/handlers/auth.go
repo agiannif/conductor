@@ -74,7 +74,9 @@ func (h *Handler) routes() *http.ServeMux {
 }
 
 func (h *Handler) getLogin(w http.ResponseWriter, r *http.Request) {
-	templates.Login("").Render(r.Context(), w)
+	if err := templates.Login("").Render(r.Context(), w); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
@@ -84,12 +86,12 @@ func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	user, hash, err := h.db.GetUserByUsername(username)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		templates.Login("Invalid username or password.").Render(r.Context(), w)
+		_ = templates.Login("Invalid username or password.").Render(r.Context(), w)
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		templates.Login("Invalid username or password.").Render(r.Context(), w)
+		_ = templates.Login("Invalid username or password.").Render(r.Context(), w)
 		return
 	}
 

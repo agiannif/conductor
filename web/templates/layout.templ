@@ -51,7 +51,9 @@ templ Layout(data LayoutData) {
 					for _, u := range data.Users {
 						<div class="flex items-center gap-2 py-1">
 							<div class="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-medium">
-								{ string([]rune(u.Username)[:1]) }
+								if len(u.Username) > 0 {
+									{ string([]rune(u.Username)[:1]) }
+								}
 							</div>
 							<span class="text-sm text-gray-700">{ u.Username }</span>
 						</div>
@@ -68,10 +70,11 @@ templ Layout(data LayoutData) {
 			</main>
 		</div>
 
-		<!-- Slide-out drawer (right side) -->
+		<!-- Slide-out drawer (right side). HTMX loads form partials into drawerContent;
+		     server-rendered templ output is auto-escaped so stored user data is safe. -->
 		<div x-show="drawerOpen" x-cloak class="fixed inset-0 z-40">
 			<div class="absolute inset-0 bg-black/30" @click="drawerOpen = false"></div>
-			<div class="absolute right-0 top-0 h-full w-96 bg-white shadow-xl overflow-y-auto"
+			<div id="drawer-inner" class="absolute right-0 top-0 h-full w-96 bg-white shadow-xl overflow-y-auto"
 				 x-html="drawerContent"></div>
 		</div>
 
