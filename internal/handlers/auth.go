@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"conductor/internal/db"
+	"conductor/web/templates"
 )
 
 // Handler holds shared dependencies for all HTTP handlers.
@@ -73,8 +74,7 @@ func (h *Handler) routes() *http.ServeMux {
 }
 
 func (h *Handler) getLogin(w http.ResponseWriter, r *http.Request) {
-	// render login.templ — stub for now, wired in Task 5
-	w.WriteHeader(http.StatusOK)
+	templates.Login("").Render(r.Context(), w)
 }
 
 func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
@@ -84,10 +84,12 @@ func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	user, hash, err := h.db.GetUserByUsername(username)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
+		templates.Login("Invalid username or password.").Render(r.Context(), w)
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
+		templates.Login("Invalid username or password.").Render(r.Context(), w)
 		return
 	}
 

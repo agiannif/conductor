@@ -1,0 +1,86 @@
+package templates
+
+import (
+	"conductor/internal/models"
+	"fmt"
+)
+
+type LayoutData struct {
+	User         models.User
+	Users        []models.User
+	ProjectCount int
+	AllTaskCount int
+	MyTaskCount  int
+}
+
+templ Layout(data LayoutData) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full bg-gray-50">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>conductor</title>
+		<link rel="stylesheet" href="/static/css/style.css"/>
+		<script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+		<script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
+	</head>
+	<body class="h-full" x-data="{ drawerOpen: false, drawerContent: '', modalOpen: false }">
+		<div class="flex h-full">
+			<!-- Sidebar -->
+			<aside class="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+				<div class="px-4 py-4 border-b border-gray-100">
+					<a href="/" class="text-lg font-semibold text-gray-900">conductor</a>
+				</div>
+				<nav class="flex-1 px-3 py-3 space-y-1">
+					<a href="/" class="flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-gray-100">
+						<span>Projects</span>
+						<span class="text-xs text-gray-400">{ fmt.Sprint(data.ProjectCount) }</span>
+					</a>
+					<a href="/tasks" class="flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-gray-100">
+						<span>All tasks</span>
+						<span class="text-xs text-gray-400">{ fmt.Sprint(data.AllTaskCount) }</span>
+					</a>
+					<a href="/tasks/mine" class="flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-gray-100">
+						<span>My tasks</span>
+						<span class="text-xs text-gray-400">{ fmt.Sprint(data.MyTaskCount) }</span>
+					</a>
+				</nav>
+				<!-- User roster -->
+				<div class="px-4 py-3 border-t border-gray-100">
+					<p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Team</p>
+					for _, u := range data.Users {
+						<div class="flex items-center gap-2 py-1">
+							<div class="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-medium">
+								{ string([]rune(u.Username)[:1]) }
+							</div>
+							<span class="text-sm text-gray-700">{ u.Username }</span>
+						</div>
+					}
+				</div>
+				<!-- Logout -->
+				<form method="POST" action="/logout" class="px-4 py-3 border-t border-gray-100">
+					<button type="submit" class="text-xs text-gray-400 hover:text-gray-700">Sign out</button>
+				</form>
+			</aside>
+			<!-- Main content -->
+			<main class="flex-1 overflow-auto">
+				{ children... }
+			</main>
+		</div>
+
+		<!-- Slide-out drawer (right side) -->
+		<div x-show="drawerOpen" x-cloak class="fixed inset-0 z-40">
+			<div class="absolute inset-0 bg-black/30" @click="drawerOpen = false"></div>
+			<div class="absolute right-0 top-0 h-full w-96 bg-white shadow-xl overflow-y-auto"
+				 x-html="drawerContent"></div>
+		</div>
+
+		<!-- Centered modal -->
+		<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center">
+			<div class="absolute inset-0 bg-black/30" @click="modalOpen = false"></div>
+			<div class="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4"
+				 id="modal-content"></div>
+		</div>
+	</body>
+	</html>
+}
