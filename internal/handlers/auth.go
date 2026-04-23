@@ -91,7 +91,7 @@ func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = h.db.DeleteExpiredSessions()
+	_ = h.db.DeleteExpiredSessions() // Best-effort cleanup; failure is non-fatal.
 	token, err := h.db.CreateSession(user.ID)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -105,6 +105,7 @@ func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   h.secureCookie,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   30 * 24 * 60 * 60, // 30 days — matches DB session sliding window
 	})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

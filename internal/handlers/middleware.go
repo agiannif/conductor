@@ -20,7 +20,7 @@ func (h *Handler) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 		session, err := h.db.GetSession(cookie.Value)
 		if err != nil {
-			http.SetCookie(w, &http.Cookie{Name: "session", MaxAge: -1})
+			http.SetCookie(w, &http.Cookie{Name: "session", MaxAge: -1, Path: "/"})
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
