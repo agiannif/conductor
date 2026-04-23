@@ -9,6 +9,15 @@ CLAUDE.local.md
 *.swo
 *~
 
+# Binaries
+conductor
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+
 # OS
 .DS_Store
 Thumbs.db
