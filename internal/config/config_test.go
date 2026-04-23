@@ -8,6 +8,12 @@ import (
 )
 
 func TestDefaults(t *testing.T) {
+	origDB := os.Getenv("CONDUCTOR_DB_PATH")
+	origCookie := os.Getenv("CONDUCTOR_SECURE_COOKIE")
+	t.Cleanup(func() {
+		os.Setenv("CONDUCTOR_DB_PATH", origDB)
+		os.Setenv("CONDUCTOR_SECURE_COOKIE", origCookie)
+	})
 	os.Unsetenv("CONDUCTOR_DB_PATH")
 	os.Unsetenv("CONDUCTOR_SECURE_COOKIE")
 
