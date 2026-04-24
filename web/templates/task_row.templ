@@ -1,0 +1,30 @@
+package templates
+
+import (
+	"conductor/internal/models"
+	"fmt"
+)
+
+// TaskRow renders a single task row for HTMX swap (postToggleTask).
+templ TaskRow(task models.Task) {
+	<div id={ fmt.Sprintf("task-%d", task.ID) }
+		class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+		hx-get={ fmt.Sprintf("/partials/tasks/%d", task.ID) }
+		hx-target="#drawer-inner"
+		hx-swap="innerHTML"
+		hx-trigger="click[!event.target.closest('input')]"
+		@click="drawerOpen = true">
+		<input type="checkbox"
+			checked?={ task.Status == models.StatusDone }
+			hx-post={ fmt.Sprintf("/tasks/%d/toggle", task.ID) }
+			hx-target={ fmt.Sprintf("#task-%d", task.ID) }
+			hx-swap="outerHTML"
+			class="rounded border-gray-300"/>
+		<span class={ "flex-1 text-sm", templ.KV("line-through text-gray-400", task.Status == models.StatusDone) }>{ task.Title }</span>
+		if task.AssigneeName != "" {
+			<div class="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs flex-shrink-0">
+				{ string([]rune(task.AssigneeName)[:1]) }
+			</div>
+		}
+	</div>
+}

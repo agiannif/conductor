@@ -1,0 +1,89 @@
+package templates
+
+import (
+	"conductor/internal/models"
+	"fmt"
+)
+
+// TaskDetail renders a read-only task detail panel (shown in drawer).
+templ TaskDetail(task models.Task) {
+	<div class="p-6">
+		<div class="flex items-start justify-between mb-4">
+			<h2 class="text-lg font-semibold flex-1 mr-4">{ task.Title }</h2>
+			<div class="flex gap-2 flex-shrink-0">
+				<button
+					hx-get={ fmt.Sprintf("/partials/tasks/%d/edit", task.ID) }
+					hx-target="#drawer-inner"
+					hx-swap="innerHTML"
+					class="text-sm text-gray-600 border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50">
+					Edit
+				</button>
+				<button
+					hx-post={ fmt.Sprintf("/tasks/%d/delete", task.ID) }
+					x-on:click="if(!confirm('Delete this task?')) $event.preventDefault()"
+					class="text-sm text-red-600 border border-red-300 px-3 py-1.5 rounded hover:bg-red-50">
+					Delete
+				</button>
+			</div>
+		</div>
+		<dl class="space-y-3 text-sm">
+			<div class="flex gap-3">
+				<dt class="w-28 text-gray-500 flex-shrink-0">Status</dt>
+				<dd class="text-gray-900">{ string(task.Status) }</dd>
+			</div>
+			<div class="flex gap-3">
+				<dt class="w-28 text-gray-500 flex-shrink-0">Priority</dt>
+				<dd class="text-gray-900">{ string(task.Priority) }</dd>
+			</div>
+			<div class="flex gap-3">
+				<dt class="w-28 text-gray-500 flex-shrink-0">Project</dt>
+				<dd class="text-gray-900">{ task.ProjectName }</dd>
+			</div>
+			if task.Category != "" {
+				<div class="flex gap-3">
+					<dt class="w-28 text-gray-500 flex-shrink-0">Category</dt>
+					<dd class="text-gray-900">{ task.Category }</dd>
+				</div>
+			}
+			if task.AssigneeName != "" {
+				<div class="flex gap-3">
+					<dt class="w-28 text-gray-500 flex-shrink-0">Assignee</dt>
+					<dd class="text-gray-900">{ task.AssigneeName }</dd>
+				</div>
+			}
+			if task.DueDate != nil {
+				<div class="flex gap-3">
+					<dt class="w-28 text-gray-500 flex-shrink-0">Due date</dt>
+					<dd class={ templ.KV("text-red-600", task.IsOverdue()), templ.KV("text-gray-900", !task.IsOverdue()) }>
+						{ task.DueDate.Format("Jan 2, 2006") }
+						if task.IsOverdue() {
+							<span class="ml-1 text-xs">(overdue)</span>
+						}
+					</dd>
+				</div>
+			}
+			if task.Description != "" {
+				<div>
+					<dt class="text-gray-500 mb-1">Description</dt>
+					<dd class="text-gray-900 whitespace-pre-wrap">{ task.Description }</dd>
+				</div>
+			}
+			if task.Link != "" {
+				<div class="flex gap-3">
+					<dt class="w-28 text-gray-500 flex-shrink-0">Link</dt>
+					<dd><a href={ templ.SafeURL(task.Link) } class="text-teal-700 hover:underline break-all" target="_blank" rel="noopener">{ task.Link }</a></dd>
+				</div>
+			}
+			if task.CreatedByName != "" {
+				<div class="flex gap-3">
+					<dt class="w-28 text-gray-500 flex-shrink-0">Created by</dt>
+					<dd class="text-gray-900">{ task.CreatedByName }</dd>
+				</div>
+			}
+			<div class="flex gap-3">
+				<dt class="w-28 text-gray-500 flex-shrink-0">Created</dt>
+				<dd class="text-gray-900">{ task.CreatedAt.Format("Jan 2, 2006") }</dd>
+			</div>
+		</dl>
+	</div>
+}

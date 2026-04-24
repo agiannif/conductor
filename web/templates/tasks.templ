@@ -1,0 +1,29 @@
+package templates
+
+import (
+	"conductor/internal/models"
+)
+
+// AllTasks renders the full all-tasks page. Replaced with a richer view in Task 8.
+templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project, users []models.User, filters models.TaskFilters) {
+	@Layout(layout) {
+		<div class="p-6">
+			<h1 class="text-2xl font-semibold mb-4">All tasks</h1>
+			<div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+				@TaskRows(tasks)
+			</div>
+		</div>
+	}
+}
+
+// MyTasks renders the current-user task page. Replaced with a richer view in Task 8.
+templ MyTasks(layout LayoutData, tasks []models.Task) {
+	@Layout(layout) {
+		<div class="p-6">
+			<h1 class="text-2xl font-semibold mb-4">My tasks</h1>
+			<div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+				@TaskRows(tasks)
+			</div>
+		</div>
+	}
+}

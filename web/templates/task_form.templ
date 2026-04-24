@@ -1,0 +1,186 @@
+package templates
+
+import (
+	"conductor/internal/models"
+	"fmt"
+)
+
+type TaskFormData struct {
+	Task                 *models.Task // nil = create, non-nil = edit
+	Projects             []models.Project
+	Users                []models.User
+	PreselectedProjectID int64 // used in create mode to pre-select a project
+}
+
+templ TaskForm(data TaskFormData) {
+	<div class="p-6">
+		<h2 class="text-lg font-semibold mb-4">
+			if data.Task != nil {
+				Edit task
+			} else {
+				New task
+			}
+		</h2>
+		if data.Task != nil {
+			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/tasks/%d", data.Task.ID)) } class="space-y-4">
+				@taskFormFields(data)
+			</form>
+		} else {
+			<form method="POST" action="/tasks" class="space-y-4">
+				@taskFormFields(data)
+			</form>
+		}
+	</div>
+}
+
+templ taskFormFields(data TaskFormData) {
+	<!-- Title -->
+	<div>
+		<label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
+		<input type="text" id="title" name="title" required
+			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Title }) }
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+	</div>
+	<!-- Description -->
+	<div>
+		<label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+		<textarea id="description" name="description" rows="3"
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+			{ taskFieldStr(data.Task, func(t *models.Task) string { return t.Description }) }
+		</textarea>
+	</div>
+	<!-- Link -->
+	<div>
+		<label for="link" class="block text-sm font-medium text-gray-700 mb-1">Link</label>
+		<input type="text" id="link" name="link"
+			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Link }) }
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+	</div>
+	<!-- Status -->
+	<div>
+		<label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+		<select id="status" name="status"
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+			@statusOption(models.StatusTodo, data.Task)
+			@statusOption(models.StatusInProgress, data.Task)
+			@statusOption(models.StatusBlocked, data.Task)
+			@statusOption(models.StatusDone, data.Task)
+		</select>
+	</div>
+	<!-- Category -->
+	<div>
+		<label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+		<input type="text" id="category" name="category"
+			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+	</div>
+	<!-- Priority -->
+	<div>
+		<label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+		<select id="priority" name="priority"
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+			@priorityOption(models.PriorityCritical, data.Task)
+			@priorityOption(models.PriorityHigh, data.Task)
+			@priorityOption(models.PriorityMedium, data.Task)
+			@priorityOption(models.PriorityLow, data.Task)
+		</select>
+	</div>
+	<!-- Project -->
+	<div>
+		<label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">
+			Project
+			if data.Task == nil {
+				<span class="text-red-500">*</span>
+			}
+		</label>
+		if data.Task != nil {
+			<!-- Edit mode: project cannot be changed, show as disabled -->
+			<select id="project_id" name="project_id" disabled
+				class="w-full border border-gray-200 rounded px-3 py-2 text-sm bg-gray-50 text-gray-500">
+				for _, p := range data.Projects {
+					if p.ID == data.Task.ProjectID {
+						<option value={ fmt.Sprint(p.ID) } selected>{ p.Name }</option>
+					} else {
+						<option value={ fmt.Sprint(p.ID) }>{ p.Name }</option>
+					}
+				}
+			</select>
+		} else {
+			<select id="project_id" name="project_id" required
+				class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+				<option value="">— select project —</option>
+				for _, p := range data.Projects {
+					if data.PreselectedProjectID != 0 && p.ID == data.PreselectedProjectID {
+						<option value={ fmt.Sprint(p.ID) } selected>{ p.Name }</option>
+					} else {
+						<option value={ fmt.Sprint(p.ID) }>{ p.Name }</option>
+					}
+				}
+			</select>
+		}
+	</div>
+	<!-- Assignee -->
+	<div>
+		<label for="assignee_id" class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+		<select id="assignee_id" name="assignee_id"
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+			<option value="">Unassigned</option>
+			for _, u := range data.Users {
+				if data.Task != nil && data.Task.AssigneeID != nil && *data.Task.AssigneeID == u.ID {
+					<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
+				} else {
+					<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
+				}
+			}
+		</select>
+	</div>
+	<!-- Due date -->
+	<div>
+		<label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due date</label>
+		<input type="date" id="due_date" name="due_date"
+			value={ taskDueDateStr(data.Task) }
+			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+	</div>
+	<div class="flex justify-end gap-2">
+		<button type="button" @click="drawerOpen = false"
+			class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
+			Cancel
+		</button>
+		<button type="submit"
+			class="px-4 py-2 text-sm bg-teal-700 text-white rounded hover:bg-teal-800">
+			Save
+		</button>
+	</div>
+}
+
+templ statusOption(s models.Status, task *models.Task) {
+	if task != nil && task.Status == s {
+		<option value={ string(s) } selected>{ string(s) }</option>
+	} else {
+		<option value={ string(s) }>{ string(s) }</option>
+	}
+}
+
+templ priorityOption(p models.Priority, task *models.Task) {
+	if task != nil && task.Priority == p {
+		<option value={ string(p) } selected>{ string(p) }</option>
+	} else {
+		<option value={ string(p) }>{ string(p) }</option>
+	}
+}
+
+// taskFieldStr extracts a string field from a task if non-nil, else returns "".
+func taskFieldStr(task *models.Task, fn func(*models.Task) string) string {
+	if task == nil {
+		return ""
+	}
+	return fn(task)
+}
+
+// taskDueDateStr returns the due date formatted as YYYY-MM-DD for the date input.
+func taskDueDateStr(task *models.Task) string {
+	if task == nil || task.DueDate == nil {
+		return ""
+	}
+	return task.DueDate.Format("2006-01-02")
+}
