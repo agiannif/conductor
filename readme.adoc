@@ -1,0 +1,145 @@
+:showtitle:
+:toc: left
+:icons: font
+
+= conductor
+
+A self-hosted task tracking app for small teams. Projects, tasks, assignees, due dates, priorities — no accounts, no cloud, no nonsense.
+
+Built with Go, templ, HTMX, AlpineJS, SQLite, and Tailwind CSS. Ships as a single Docker container.
+
+== Prerequisites
+
+* https://go.dev/dl/[Go 1.26+]
+* https://templ.guide/quick-start/installation[templ CLI]: `go install github.com/a-h/templ/cmd/templ@latest`
+* https://tailwindcss.com/blog/standalone-cli[Tailwind CSS standalone CLI]: `brew install tailwindcss`
+
+NOTE: templ and Tailwind are dev-only dependencies. The Docker build handles them inside the container.
+
+== Local development
+
+[source,shell]
+----
+make run
+----
+
+This generates templates and CSS, then starts the server at http://localhost:8080. The database is created at `./conductor.db` automatically.
+
+You will need to create an admin user before you can log in:
+
+[source,shell]
+----
+CONDUCTOR_DB_PATH=./conductor.db go run ./cmd/conductor admin add-user <username> <password>
+----
+
+Other useful targets:
+
+[source,shell]
+----
+make help       # show all available commands
+make test       # run all tests
+make generate   # re-run templ code generation
+make css        # recompile Tailwind CSS
+make clean      # remove generated files and local database
+----
+
+== Admin CLI
+
+The `conductor admin` subcommand manages users directly against the database. Run it on the same machine as the database, or inside the container via `docker exec`.
+
+=== List users
+
+[source,shell]
+----
+conductor admin list-users
+----
+
+=== Add a user
+
+[source,shell]
+----
+conductor admin add-user <username> <password>
+----
+
+[source,shell]
+----
+$ conductor admin add-user alice hunter2
+created user "alice" (id=1)
+----
+
+=== Delete a user
+
+[source,shell]
+----
+conductor admin delete-user <username>
+----
+
+[source,shell]
+----
+$ conductor admin delete-user alice
+deleted user "alice"
+----
+
+=== Reset a password
+
+[source,shell]
+----
+conductor admin reset-password <username> <new-password>
+----
+
+[source,shell]
+----
+$ conductor admin reset-password alice newpassword
+password reset for user "alice"
+----
+
+=== Running admin commands inside Docker
+
+[source,shell]
+----
+docker exec -it conductor_conductor_1 /conductor admin list-users
+docker exec -it conductor_conductor_1 /conductor admin add-user alice hunter2
+----
+
+== Running with Docker Compose
+
+[source,shell]
+----
+docker compose up -d
+----
+
+The app listens on port 8080. The SQLite database is stored in the `conductor_data` Docker volume.
+
+[source,shell]
+----
+docker compose down       # stop
+docker compose logs -f    # follow logs
+----
+
+NOTE: The default compose file sets `CONDUCTOR_SECURE_COOKIE=false`. Set it to `true` when running behind HTTPS in production.
+
+== Configuration
+
+Configuration is via environment variables.
+
+[cols="2,1,3"]
+|===
+| Variable | Default | Description
+
+| `CONDUCTOR_DB_PATH`
+| `/data/conductor.db`
+| Path to the SQLite database file.
+
+| `CONDUCTOR_SECURE_COOKIE`
+| `true`
+| Set the `Secure` flag on session cookies. Set to `false` for local HTTP development.
+|===
+
+== Building the Docker image
+
+[source,shell]
+----
+make build
+----
+
+This runs `templ generate`, compiles Tailwind CSS, then builds the Docker image tagged `conductor`.
