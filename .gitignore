@@ -9,6 +9,15 @@ CLAUDE.local.md
 *.swo
 *~
 
+# Generated files (run 'make generate' and 'make css' to recreate)
+web/static/css/style.css
+web/templates/*_templ.go
+
+# Local dev database
+conductor.db
+conductor.db-shm
+conductor.db-wal
+
 # Binaries
 /conductor
 *.exe
