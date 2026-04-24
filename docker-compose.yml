@@ -1,0 +1,14 @@
+services:
+  conductor:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - conductor_data:/data
+    environment:
+      - CONDUCTOR_SECURE_COOKIE=false
+      - CONDUCTOR_DB_PATH=/data/conductor.db
+    restart: unless-stopped
+
+volumes:
+  conductor_data:

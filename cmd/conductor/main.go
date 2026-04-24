@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 	_ "time/tzdata"
 
 	"golang.org/x/crypto/bcrypt"
@@ -42,7 +43,8 @@ func runCLI(args []string) {
 	}
 	switch args[0] {
 	case "healthz":
-		resp, err := http.Get("http://localhost:8080/healthz")
+		client := &http.Client{Timeout: 3 * time.Second}
+		resp, err := client.Get("http://localhost:8080/healthz")
 		if err != nil || resp.StatusCode != http.StatusOK {
 			os.Exit(1)
 		}
