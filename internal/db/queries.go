@@ -12,6 +12,9 @@ import (
 	"conductor/internal/models"
 )
 
+// ErrNotFound is returned by Get* methods when a row does not exist.
+var ErrNotFound = errors.New("not found")
+
 // priorityOrder is the SQL CASE expression for ordering tasks by priority.
 const priorityOrder = `CASE priority
 	WHEN 'critical' THEN 1
@@ -42,7 +45,7 @@ func (d *DB) GetUserByUsername(username string) (models.User, string, error) {
 		username,
 	).Scan(&u.ID, &u.Username, &hash, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		return u, "", fmt.Errorf("user not found")
+		return u, "", fmt.Errorf("user not found: %w", ErrNotFound)
 	}
 	return u, hash, err
 }
@@ -54,7 +57,7 @@ func (d *DB) GetUserByID(id int64) (models.User, string, error) {
 		`SELECT id, username, password_hash, created_at FROM users WHERE id = ?`, id,
 	).Scan(&u.ID, &u.Username, &hash, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		return u, "", fmt.Errorf("user not found")
+		return u, "", fmt.Errorf("user not found: %w", ErrNotFound)
 	}
 	return u, hash, err
 }
@@ -82,11 +85,17 @@ func (d *DB) DeleteUser(userID int64) error {
 }
 
 func (d *DB) UpdateUserPassword(userID int64, passwordHash string) error {
-	_, err := d.sql.Exec(
+	res, err := d.sql.Exec(
 		`UPDATE users SET password_hash = ? WHERE id = ?`,
 		passwordHash, userID,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("user not found: %w", ErrNotFound)
+	}
+	return nil
 }
 
 // ---- Sessions ----

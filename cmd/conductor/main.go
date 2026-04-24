@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	_ "time/tzdata"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"conductor/internal/config"
 	"conductor/internal/db"
@@ -85,18 +88,61 @@ func runAdmin(args []string) {
 	}
 }
 
-// adminAddUser, adminDeleteUser, adminResetPassword are stubs — implemented fully in Task 9.
 func adminAddUser(database *db.DB, args []string) {
-	fmt.Fprintln(os.Stderr, "not yet implemented")
-	os.Exit(1)
+	if len(args) < 2 {
+		fmt.Fprintln(os.Stderr, "usage: conductor admin add-user <username> <password>")
+		os.Exit(1)
+	}
+	username, password := args[0], args[1]
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("add user: %v", err)
+	}
+	id, err := database.CreateUser(username, string(hash))
+	if err != nil {
+		log.Fatalf("add user: %v", err)
+	}
+	fmt.Printf("created user %q (id=%d)\n", username, id)
 }
 
 func adminDeleteUser(database *db.DB, args []string) {
-	fmt.Fprintln(os.Stderr, "not yet implemented")
-	os.Exit(1)
+	if len(args) < 1 {
+		fmt.Fprintln(os.Stderr, "usage: conductor admin delete-user <username>")
+		os.Exit(1)
+	}
+	username := args[0]
+	user, _, err := database.GetUserByUsername(username)
+	if errors.Is(err, db.ErrNotFound) {
+		fmt.Fprintf(os.Stderr, "user %q not found\n", username)
+		os.Exit(1)
+	} else if err != nil {
+		log.Fatalf("get user: %v", err)
+	}
+	if err := database.DeleteUser(user.ID); err != nil {
+		log.Fatalf("delete user: %v", err)
+	}
+	fmt.Printf("deleted user %q\n", username)
 }
 
 func adminResetPassword(database *db.DB, args []string) {
-	fmt.Fprintln(os.Stderr, "not yet implemented")
-	os.Exit(1)
+	if len(args) < 2 {
+		fmt.Fprintln(os.Stderr, "usage: conductor admin reset-password <username> <new-password>")
+		os.Exit(1)
+	}
+	username, newPassword := args[0], args[1]
+	user, _, err := database.GetUserByUsername(username)
+	if errors.Is(err, db.ErrNotFound) {
+		fmt.Fprintf(os.Stderr, "user %q not found\n", username)
+		os.Exit(1)
+	} else if err != nil {
+		log.Fatalf("get user: %v", err)
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("reset password: %v", err)
+	}
+	if err := database.UpdateUserPassword(user.ID, string(hash)); err != nil {
+		log.Fatalf("reset password: %v", err)
+	}
+	fmt.Printf("password reset for user %q\n", username)
 }
