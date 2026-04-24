@@ -87,9 +87,8 @@ func (h *Handler) postDeleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 	count, _ := h.db.ProjectTaskCount(id)
 	if count > 0 {
-		// Return blocked response — HTMX will swap modal content with this message
 		w.WriteHeader(http.StatusConflict)
-		fmt.Fprintf(w, `<p class="text-red-600">This project has %d task(s). Delete or reassign them first.</p>`, count)
+		_ = templates.ProjectDeleteError(count).Render(r.Context(), w)
 		return
 	}
 	if err := h.db.DeleteProject(id); err != nil {

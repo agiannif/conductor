@@ -30,6 +30,17 @@ templ ProjectForm(data ProjectFormData) {
 	</div>
 }
 
+// ProjectDeleteError renders the conflict error fragment returned when deleting a project that has tasks.
+templ ProjectDeleteError(taskCount int) {
+	<p class="text-red-600 text-sm">
+		if taskCount == 1 {
+			This project has 1 task. Delete or reassign it first.
+		} else {
+			This project has { fmt.Sprint(taskCount) } tasks. Delete or reassign them first.
+		}
+	</p>
+}
+
 templ projectFormFields(name, description string) {
 	<div>
 		<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>

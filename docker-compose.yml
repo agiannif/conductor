@@ -6,7 +6,7 @@ services:
     volumes:
       - conductor_data:/data
     environment:
-      - CONDUCTOR_SECURE_COOKIE=false
+      - CONDUCTOR_SECURE_COOKIE=false  # set to true behind HTTPS in production
       - CONDUCTOR_DB_PATH=/data/conductor.db
     restart: unless-stopped
 

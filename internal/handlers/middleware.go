@@ -24,8 +24,18 @@ func (h *Handler) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		// Extend sliding window session
+		// Extend sliding window session and refresh the browser cookie MaxAge
+		// so it stays alive as long as the DB session is valid.
 		_ = h.db.ExtendSession(cookie.Value)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    cookie.Value,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   h.secureCookie,
+			SameSite: http.SameSiteStrictMode,
+			MaxAge:   30 * 24 * 60 * 60,
+		})
 
 		user, _, err := h.db.GetUserByID(session.UserID)
 		if err != nil {

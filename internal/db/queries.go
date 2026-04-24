@@ -121,7 +121,7 @@ func (d *DB) GetSession(token string) (models.Session, error) {
 		token,
 	).Scan(&s.ID, &s.UserID, &s.ExpiresAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		return s, fmt.Errorf("session not found or expired")
+		return s, fmt.Errorf("session not found or expired: %w", ErrNotFound)
 	}
 	return s, err
 }
@@ -201,11 +201,17 @@ func (d *DB) ListProjects() ([]models.Project, error) {
 }
 
 func (d *DB) UpdateProject(id int64, name, description string) error {
-	_, err := d.sql.Exec(
+	res, err := d.sql.Exec(
 		`UPDATE projects SET name = ?, description = ? WHERE id = ?`,
 		name, description, id,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("project not found: %w", ErrNotFound)
+	}
+	return nil
 }
 
 func (d *DB) DeleteProject(id int64) error {
@@ -406,7 +412,7 @@ func (d *DB) ListTasks(f models.TaskFilters) ([]models.Task, error) {
 }
 
 func (d *DB) UpdateTask(p UpdateTaskParams) error {
-	_, err := d.sql.Exec(`
+	res, err := d.sql.Exec(`
 		UPDATE tasks SET
 			title = ?, description = ?, link = ?, status = ?,
 			category = ?, priority = ?, assignee_id = ?, due_date = ?
@@ -414,7 +420,13 @@ func (d *DB) UpdateTask(p UpdateTaskParams) error {
 		p.Title, p.Description, p.Link, string(p.Status),
 		p.Category, string(p.Priority), p.AssigneeID, p.DueDate, p.ID,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("task not found: %w", ErrNotFound)
+	}
+	return nil
 }
 
 func (d *DB) DeleteTask(id int64) error {
