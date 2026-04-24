@@ -24,7 +24,7 @@ templ Layout(data LayoutData) {
 		<script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
 		<script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
 	</head>
-	<body class="h-full" x-data="{ drawerOpen: false, drawerContent: '', modalOpen: false }">
+	<body class="h-full" x-data="{ drawerOpen: false, modalOpen: false }">
 		<div class="flex h-full">
 			<!-- Sidebar -->
 			<aside class="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
@@ -70,12 +70,11 @@ templ Layout(data LayoutData) {
 			</main>
 		</div>
 
-		<!-- Slide-out drawer (right side). HTMX loads form partials into drawerContent;
+		<!-- Slide-out drawer (right side). HTMX loads form partials into #drawer-inner;
 		     server-rendered templ output is auto-escaped so stored user data is safe. -->
 		<div x-show="drawerOpen" x-cloak class="fixed inset-0 z-40">
 			<div class="absolute inset-0 bg-black/30" @click="drawerOpen = false"></div>
-			<div id="drawer-inner" class="absolute right-0 top-0 h-full w-96 bg-white shadow-xl overflow-y-auto"
-				 x-html="drawerContent"></div>
+			<div id="drawer-inner" class="absolute right-0 top-0 h-full w-96 bg-white shadow-xl overflow-y-auto"></div>
 		</div>
 
 		<!-- Centered modal -->
