@@ -5,85 +5,131 @@ import (
 	"fmt"
 )
 
-// TaskDetail renders a read-only task detail panel (shown in drawer).
 templ TaskDetail(task models.Task) {
-	<div class="p-6">
-		<div class="flex items-start justify-between mb-4">
-			<h2 class="text-lg font-semibold flex-1 mr-4">{ task.Title }</h2>
-			<div class="flex gap-2 flex-shrink-0">
-				<button
-					hx-get={ fmt.Sprintf("/partials/tasks/%d/edit", task.ID) }
-					hx-target="#drawer-inner"
-					hx-swap="innerHTML"
-					class="text-sm text-gray-600 border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50">
-					Edit
-				</button>
-				<button
-					hx-post={ fmt.Sprintf("/tasks/%d/delete", task.ID) }
-					x-on:click="if(!confirm('Delete this task?')) $event.preventDefault()"
-					class="text-sm text-red-600 border border-red-300 px-3 py-1.5 rounded hover:bg-red-50">
-					Delete
-				</button>
-			</div>
+	<!-- Panel header -->
+	<div class="flex items-center justify-between px-5 py-4 border-b border-outline-hair">
+		<span class="text-[11px] font-medium text-on-surface-muted uppercase tracking-[0.5px]">Task</span>
+		<div class="flex items-center gap-1">
+			<button class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
+				<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+				</svg>
+			</button>
+			<button @click="drawerOpen = false" class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
+				<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+				</svg>
+			</button>
 		</div>
-		<dl class="space-y-3 text-sm">
-			<div class="flex gap-3">
-				<dt class="w-28 text-gray-500 flex-shrink-0">Status</dt>
-				<dd class="text-gray-900">{ string(task.Status) }</dd>
+	</div>
+	<!-- Checkbox + title + description -->
+	<div class="px-5 py-4 border-b border-outline-hair">
+		<div class="flex items-start gap-3">
+			<input type="checkbox"
+			       checked?={ task.Status == models.StatusDone }
+			       hx-post={ fmt.Sprintf("/tasks/%d/toggle", task.ID) }
+			       hx-target={ fmt.Sprintf("#task-%d", task.ID) }
+			       hx-swap="outerHTML"
+			       class="mt-1 rounded-[3px] border-outline accent-tertiary flex-shrink-0"/>
+			<h2 class={ "text-[18px] font-medium leading-snug",
+			            templ.KV("line-through text-secondary", task.Status == models.StatusDone),
+			            templ.KV("text-primary", task.Status != models.StatusDone) }>
+				{ task.Title }
+			</h2>
+		</div>
+		if task.Description != "" {
+			<p class="mt-3 ml-6 text-[14px] text-secondary leading-relaxed whitespace-pre-wrap">{ task.Description }</p>
+		}
+	</div>
+	<!-- Metadata -->
+	<div class="px-5 py-4 space-y-3 border-b border-outline-hair">
+		<div class="flex items-center gap-3">
+			<span class="w-20 text-[13px] text-secondary flex-shrink-0">Project</span>
+			<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">{ task.ProjectName }</span>
+		</div>
+		<div class="flex items-center gap-3">
+			<span class="w-20 text-[13px] text-secondary flex-shrink-0">Status</span>
+			@statusPill(task.Status)
+		</div>
+		<div class="flex items-center gap-3">
+			<span class="w-20 text-[13px] text-secondary flex-shrink-0">Priority</span>
+			<span class="flex items-center gap-1.5 text-[13px] text-primary">
+				@priorityFlag(task.Priority)
+				<span class="capitalize">{ string(task.Priority) }</span>
+			</span>
+		</div>
+		if task.Category != "" {
+			<div class="flex items-center gap-3">
+				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Category</span>
+				<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">{ task.Category }</span>
 			</div>
-			<div class="flex gap-3">
-				<dt class="w-28 text-gray-500 flex-shrink-0">Priority</dt>
-				<dd class="text-gray-900">{ string(task.Priority) }</dd>
+		}
+		if task.AssigneeName != "" {
+			<div class="flex items-center gap-3">
+				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Assignee</span>
+				<span class="flex items-center gap-2">
+					<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium"
+					      style={ fmt.Sprintf("background-color:%s;color:%s", avatarFillByID(task.AssigneeID), avatarTextByID(task.AssigneeID)) }>
+						{ string([]rune(task.AssigneeName)[:1]) }
+					</span>
+					<span class="text-[13px] text-primary">{ task.AssigneeName }</span>
+				</span>
 			</div>
-			<div class="flex gap-3">
-				<dt class="w-28 text-gray-500 flex-shrink-0">Project</dt>
-				<dd class="text-gray-900">{ task.ProjectName }</dd>
+		}
+		if task.DueDate != nil {
+			<div class="flex items-center gap-3">
+				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Due</span>
+				<span class={ "flex items-center gap-1.5 text-[13px]",
+				              templ.KV("text-danger", task.IsOverdue()),
+				              templ.KV("text-primary", !task.IsOverdue()) }>
+					@iconCalendar()
+					{ task.DueDate.Format("Jan 2, 2006") }
+					if task.IsOverdue() {
+						<span class="text-[11px] text-danger">(overdue)</span>
+					}
+				</span>
 			</div>
-			if task.Category != "" {
-				<div class="flex gap-3">
-					<dt class="w-28 text-gray-500 flex-shrink-0">Category</dt>
-					<dd class="text-gray-900">{ task.Category }</dd>
-				</div>
-			}
-			if task.AssigneeName != "" {
-				<div class="flex gap-3">
-					<dt class="w-28 text-gray-500 flex-shrink-0">Assignee</dt>
-					<dd class="text-gray-900">{ task.AssigneeName }</dd>
-				</div>
-			}
-			if task.DueDate != nil {
-				<div class="flex gap-3">
-					<dt class="w-28 text-gray-500 flex-shrink-0">Due date</dt>
-					<dd class={ templ.KV("text-red-600", task.IsOverdue()), templ.KV("text-gray-900", !task.IsOverdue()) }>
-						{ task.DueDate.Format("Jan 2, 2006") }
-						if task.IsOverdue() {
-							<span class="ml-1 text-xs">(overdue)</span>
-						}
-					</dd>
-				</div>
-			}
-			if task.Description != "" {
-				<div>
-					<dt class="text-gray-500 mb-1">Description</dt>
-					<dd class="text-gray-900 whitespace-pre-wrap">{ task.Description }</dd>
-				</div>
-			}
-			if task.Link != "" {
-				<div class="flex gap-3">
-					<dt class="w-28 text-gray-500 flex-shrink-0">Link</dt>
-					<dd><a href={ templ.SafeURL(task.Link) } class="text-teal-700 hover:underline break-all" target="_blank" rel="noopener">{ task.Link }</a></dd>
-				</div>
-			}
-			if task.CreatedByName != "" {
-				<div class="flex gap-3">
-					<dt class="w-28 text-gray-500 flex-shrink-0">Created by</dt>
-					<dd class="text-gray-900">{ task.CreatedByName }</dd>
-				</div>
-			}
-			<div class="flex gap-3">
-				<dt class="w-28 text-gray-500 flex-shrink-0">Created</dt>
-				<dd class="text-gray-900">{ task.CreatedAt.Format("Jan 2, 2006") }</dd>
+		}
+		if task.Link != "" {
+			<div class="flex items-center gap-3">
+				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Link</span>
+				<a href={ templ.SafeURL(task.Link) }
+				   class="text-[13px] text-tertiary hover:underline truncate"
+				   target="_blank" rel="noopener">
+					{ task.Link }
+				</a>
 			</div>
-		</dl>
+		}
+	</div>
+	<!-- Created / edited metadata -->
+	<div class="px-5 py-3 border-b border-outline-hair">
+		if task.CreatedByName != "" {
+			<p class="text-[12px] text-on-surface-muted">Created by { task.CreatedByName } · { task.CreatedAt.Format("Jan 2") }</p>
+		}
+		<p class="text-[12px] text-on-surface-muted">Last edited { task.UpdatedAt.Format("Jan 2, 2006") }</p>
+	</div>
+	<!-- Footer actions -->
+	<div class="flex items-center justify-between px-5 py-4">
+		<button
+		    hx-get={ fmt.Sprintf("/partials/tasks/%d/edit", task.ID) }
+		    hx-target="#drawer-inner"
+		    hx-swap="innerHTML"
+		    class="flex items-center gap-1.5 text-[13px] text-primary border border-outline px-3 py-[7px] rounded-md hover:bg-surface-sunken">
+			<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+				<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+			</svg>
+			Edit
+		</button>
+		<button
+		    hx-post={ fmt.Sprintf("/tasks/%d/delete", task.ID) }
+		    hx-confirm={ fmt.Sprintf("Delete \"%s\"? This cannot be undone.", task.Title) }
+		    class="flex items-center gap-1.5 text-[13px] text-danger hover:opacity-70">
+			<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+				<polyline points="3 6 5 6 21 6"/>
+				<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+			</svg>
+			Delete
+		</button>
 	</div>
 }
