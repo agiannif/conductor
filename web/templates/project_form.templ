@@ -6,60 +6,72 @@ import (
 )
 
 type ProjectFormData struct {
-	Project *models.Project // nil = create mode, non-nil = edit mode
+	Project *models.Project
 }
 
 templ ProjectForm(data ProjectFormData) {
-	<div class="p-6">
-		<h2 class="text-lg font-semibold mb-4">
+	<!-- Panel header -->
+	<div class="flex items-center justify-between px-5 py-4 border-b border-outline-hair">
+		<span class="text-[15px] font-medium text-primary">
 			if data.Project != nil {
 				Edit project
 			} else {
 				New project
 			}
-		</h2>
+		</span>
+		<button @click="drawerOpen = false" class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
+			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+				<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+			</svg>
+		</button>
+	</div>
+	<div class="px-5 py-4">
 		if data.Project != nil {
 			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/projects/%d", data.Project.ID)) } class="space-y-4">
-				@projectFormFields(data.Project.Name, data.Project.Description)
+				@projectFormFields(data.Project.Name, data.Project.Description, true)
 			</form>
 		} else {
 			<form method="POST" action="/projects" class="space-y-4">
-				@projectFormFields("", "")
+				@projectFormFields("", "", false)
 			</form>
 		}
 	</div>
 }
 
-// ProjectDeleteError renders the conflict error fragment returned when deleting a project that has tasks.
 templ ProjectDeleteError(taskCount int) {
-	<p class="text-red-600 text-sm">
+	<div class="bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px] text-[13px] text-warning">
+		<span class="font-medium">Blocked.</span>
 		if taskCount == 1 {
 			This project has 1 task. Delete or reassign it first.
 		} else {
 			This project has { fmt.Sprint(taskCount) } tasks. Delete or reassign them first.
 		}
-	</p>
+	</div>
 }
 
-templ projectFormFields(name, description string) {
+templ projectFormFields(name, description string, isEdit bool) {
 	<div>
-		<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>
+		<label for="name" class="block text-[13px] font-medium text-primary mb-1">Name <span class="text-danger">*</span></label>
 		<input type="text" id="name" name="name" value={ name } required
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"/>
 	</div>
 	<div>
-		<label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+		<label for="description" class="block text-[13px] font-medium text-primary mb-1">Description <span class="text-on-surface-muted font-normal">(optional)</span></label>
 		<textarea id="description" name="description" rows="3"
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">{ description }</textarea>
+		          class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">{ description }</textarea>
 	</div>
-	<div class="flex justify-end gap-2">
+	<div class="flex justify-end gap-2 pt-2">
 		<button type="button" @click="drawerOpen = false"
-			class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
+		        class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken">
 			Cancel
 		</button>
 		<button type="submit"
-			class="px-4 py-2 text-sm bg-teal-700 text-white rounded hover:bg-teal-800">
-			Save
+		        class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium">
+			if isEdit {
+				Save changes
+			} else {
+				Create project
+			}
 		</button>
 	</div>
 }

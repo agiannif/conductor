@@ -6,21 +6,30 @@ import (
 )
 
 type TaskFormData struct {
-	Task                 *models.Task // nil = create, non-nil = edit
+	Task                 *models.Task
 	Projects             []models.Project
 	Users                []models.User
-	PreselectedProjectID int64 // used in create mode to pre-select a project
+	PreselectedProjectID int64
 }
 
 templ TaskForm(data TaskFormData) {
-	<div class="p-6">
-		<h2 class="text-lg font-semibold mb-4">
+	<!-- Panel header -->
+	<div class="flex items-center justify-between px-5 py-4 border-b border-outline-hair">
+		<span class="text-[15px] font-medium text-primary">
 			if data.Task != nil {
 				Edit task
 			} else {
 				New task
 			}
-		</h2>
+		</span>
+		<button @click="drawerOpen = false" class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
+			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+				<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+			</svg>
+		</button>
+	</div>
+	<!-- Form body -->
+	<div class="px-5 py-4">
 		if data.Task != nil {
 			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/tasks/%d", data.Task.ID)) } class="space-y-4">
 				@taskFormFields(data)
@@ -34,69 +43,90 @@ templ TaskForm(data TaskFormData) {
 }
 
 templ taskFormFields(data TaskFormData) {
-	<!-- Title -->
+	<!-- Task name -->
 	<div>
-		<label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
+		<label for="title" class="block text-[13px] font-medium text-primary mb-1">
+			Task name <span class="text-danger">*</span>
+		</label>
 		<input type="text" id="title" name="title" required
-			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Title }) }
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+		       value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Title }) }
+		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"/>
 	</div>
 	<!-- Description -->
 	<div>
-		<label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+		<label for="description" class="block text-[13px] font-medium text-primary mb-1">Description <span class="text-on-surface-muted font-normal">(optional)</span></label>
 		<textarea id="description" name="description" rows="3"
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+		          class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
 			{ taskFieldStr(data.Task, func(t *models.Task) string { return t.Description }) }
 		</textarea>
 	</div>
-	<!-- Link -->
-	<div>
-		<label for="link" class="block text-sm font-medium text-gray-700 mb-1">Link</label>
-		<input type="text" id="link" name="link"
-			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Link }) }
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+	<!-- Priority + Status side by side -->
+	<div class="grid grid-cols-2 gap-3">
+		<div>
+			<label for="priority" class="block text-[13px] font-medium text-primary mb-1">Priority</label>
+			<select id="priority" name="priority"
+			        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+				@priorityOption(models.PriorityCritical, data.Task)
+				@priorityOption(models.PriorityHigh, data.Task)
+				@priorityOption(models.PriorityMedium, data.Task)
+				@priorityOption(models.PriorityLow, data.Task)
+			</select>
+		</div>
+		<div>
+			<label for="status" class="block text-[13px] font-medium text-primary mb-1">Status</label>
+			<select id="status" name="status"
+			        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+				@statusOption(models.StatusTodo, data.Task)
+				@statusOption(models.StatusInProgress, data.Task)
+				@statusOption(models.StatusBlocked, data.Task)
+				@statusOption(models.StatusDone, data.Task)
+			</select>
+		</div>
 	</div>
-	<!-- Status -->
+	<!-- Assignee -->
 	<div>
-		<label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-		<select id="status" name="status"
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-			@statusOption(models.StatusTodo, data.Task)
-			@statusOption(models.StatusInProgress, data.Task)
-			@statusOption(models.StatusBlocked, data.Task)
-			@statusOption(models.StatusDone, data.Task)
+		<label for="assignee_id" class="block text-[13px] font-medium text-primary mb-1">Assigned to</label>
+		<select id="assignee_id" name="assignee_id"
+		        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+			<option value="">Unassigned</option>
+			for _, u := range data.Users {
+				if data.Task != nil && data.Task.AssigneeID != nil && *data.Task.AssigneeID == u.ID {
+					<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
+				} else {
+					<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
+				}
+			}
 		</select>
 	</div>
-	<!-- Category -->
-	<div>
-		<label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+	<!-- Category with new-value warning -->
+	<div x-data="{ catVal: '', isNew: false }" class="space-y-2">
+		<label for="category" class="block text-[13px] font-medium text-primary mb-1">Category</label>
 		<input type="text" id="category" name="category"
-			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+		       x-model="catVal"
+		       @input="isNew = catVal.length > 0"
+		       value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
+		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		       placeholder="e.g. errands, bookings"/>
+		<div x-show="isNew" x-cloak
+		     class="flex items-start gap-2 bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px]">
+			<span class="text-[13px] text-warning flex-1">
+				"<span x-text="catVal"></span>" is a new category — confirm?
+			</span>
+			<button type="button" @click="isNew = false" class="text-[13px] font-medium text-warning hover:opacity-70 flex-shrink-0">Confirm</button>
+			<button type="button" @click="catVal = ''; isNew = false; $el.closest('div').querySelector('input').value = ''" class="text-[13px] text-secondary hover:text-primary flex-shrink-0">Cancel</button>
+		</div>
 	</div>
-	<!-- Priority -->
+	<!-- Project (create only; disabled on edit) -->
 	<div>
-		<label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-		<select id="priority" name="priority"
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-			@priorityOption(models.PriorityCritical, data.Task)
-			@priorityOption(models.PriorityHigh, data.Task)
-			@priorityOption(models.PriorityMedium, data.Task)
-			@priorityOption(models.PriorityLow, data.Task)
-		</select>
-	</div>
-	<!-- Project -->
-	<div>
-		<label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">
+		<label for="project_id" class="block text-[13px] font-medium text-primary mb-1">
 			Project
 			if data.Task == nil {
-				<span class="text-red-500">*</span>
+				<span class="text-danger">*</span>
 			}
 		</label>
 		if data.Task != nil {
-			<!-- Edit mode: project cannot be changed, show as disabled -->
 			<select id="project_id" name="project_id" disabled
-				class="w-full border border-gray-200 rounded px-3 py-2 text-sm bg-gray-50 text-gray-500">
+			        class="w-full border border-outline-hair rounded-sm px-[10px] py-[7px] text-[13px] bg-surface-sunken text-secondary">
 				for _, p := range data.Projects {
 					if p.ID == data.Task.ProjectID {
 						<option value={ fmt.Sprint(p.ID) } selected>{ p.Name }</option>
@@ -107,7 +137,7 @@ templ taskFormFields(data TaskFormData) {
 			</select>
 		} else {
 			<select id="project_id" name="project_id" required
-				class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+			        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
 				<option value="">— select project —</option>
 				for _, p := range data.Projects {
 					if data.PreselectedProjectID != 0 && p.ID == data.PreselectedProjectID {
@@ -119,36 +149,34 @@ templ taskFormFields(data TaskFormData) {
 			</select>
 		}
 	</div>
-	<!-- Assignee -->
+	<!-- Link -->
 	<div>
-		<label for="assignee_id" class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
-		<select id="assignee_id" name="assignee_id"
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-			<option value="">Unassigned</option>
-			for _, u := range data.Users {
-				if data.Task != nil && data.Task.AssigneeID != nil && *data.Task.AssigneeID == u.ID {
-					<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
-				} else {
-					<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
-				}
-			}
-		</select>
+		<label for="link" class="block text-[13px] font-medium text-primary mb-1">Link <span class="text-on-surface-muted font-normal">(optional)</span></label>
+		<input type="text" id="link" name="link"
+		       value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Link }) }
+		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		       placeholder="https://…"/>
 	</div>
 	<!-- Due date -->
 	<div>
-		<label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due date</label>
+		<label for="due_date" class="block text-[13px] font-medium text-primary mb-1">Due <span class="text-on-surface-muted font-normal">(optional)</span></label>
 		<input type="date" id="due_date" name="due_date"
-			value={ taskDueDateStr(data.Task) }
-			class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+		       value={ taskDueDateStr(data.Task) }
+		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"/>
 	</div>
-	<div class="flex justify-end gap-2">
+	<!-- Footer buttons -->
+	<div class="flex justify-end gap-2 pt-2">
 		<button type="button" @click="drawerOpen = false"
-			class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
+		        class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken">
 			Cancel
 		</button>
 		<button type="submit"
-			class="px-4 py-2 text-sm bg-teal-700 text-white rounded hover:bg-teal-800">
-			Save
+		        class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium">
+			if data.Task != nil {
+				Save changes
+			} else {
+				Add task
+			}
 		</button>
 	</div>
 }
@@ -169,7 +197,6 @@ templ priorityOption(p models.Priority, task *models.Task) {
 	}
 }
 
-// taskFieldStr extracts a string field from a task if non-nil, else returns "".
 func taskFieldStr(task *models.Task, fn func(*models.Task) string) string {
 	if task == nil {
 		return ""
@@ -177,7 +204,6 @@ func taskFieldStr(task *models.Task, fn func(*models.Task) string) string {
 	return fn(task)
 }
 
-// taskDueDateStr returns the due date formatted as YYYY-MM-DD for the date input.
 func taskDueDateStr(task *models.Task) string {
 	if task == nil || task.DueDate == nil {
 		return ""
