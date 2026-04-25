@@ -7,20 +7,35 @@ import (
 
 templ Projects(layout LayoutData, projects []models.Project) {
 	@Layout(layout) {
-		<div class="p-6">
-			<div class="flex items-center justify-between mb-6">
-				<h1 class="text-2xl font-semibold">All projects</h1>
+		<div class="pt-8 px-14">
+			<div class="flex items-center justify-between mb-5">
+				<h1 class="text-[28px] font-normal tracking-[-0.4px] text-primary">All projects</h1>
 				<button
-					hx-get="/partials/projects/new"
-					hx-target="#drawer-inner"
-					hx-swap="innerHTML"
-					@click="drawerOpen = true"
-					class="bg-teal-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-teal-800">
-					+ New project
+				    hx-get="/partials/projects/new"
+				    hx-target="#drawer-inner"
+				    hx-swap="innerHTML"
+				    @click="drawerOpen = true"
+				    class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1">
+					+ Create project
+				</button>
+			</div>
+			<!-- Toolbar: expand all + filter (filter is UI-only for now) -->
+			<div x-data="{ allExpanded: false }" class="flex items-center gap-3 mb-4">
+				<button
+				    @click="allExpanded = !allExpanded; $dispatch('projects-toggle-all', { open: allExpanded })"
+				    class="text-[13px] text-secondary hover:text-primary">
+					Expand all
+				</button>
+				<span class="text-on-surface-muted text-[13px]">·</span>
+				<button class="text-[13px] text-secondary hover:text-primary flex items-center gap-1">
+					Filter
+					<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="6 9 12 15 18 9"/>
+					</svg>
 				</button>
 			</div>
 			if len(projects) == 0 {
-				<p class="text-gray-500 text-sm">No projects yet. Create one to get started.</p>
+				<p class="text-secondary text-[13px]">No projects yet.</p>
 			}
 			<div class="space-y-3">
 				for _, p := range projects {
@@ -32,39 +47,54 @@ templ Projects(layout LayoutData, projects []models.Project) {
 }
 
 templ projectCard(p models.Project) {
-	<div class="bg-white border border-gray-200 rounded-lg" x-data="{ open: false }">
-		<button class="w-full flex items-center gap-3 px-4 py-3 text-left" @click="open = !open">
-			<svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-90': open }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+	<div class="bg-surface border border-outline rounded-lg" x-data="{ open: false }"
+	     @projects-toggle-all.window="open = $event.detail.open">
+		<button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-sunken rounded-t-lg"
+		        @click="open = !open">
+			<svg class="w-4 h-4 text-on-surface-muted flex-shrink-0 transition-transform duration-150"
+			     :class="{ 'rotate-90': open }"
+			     viewBox="0 0 24 24" fill="none" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 5l7 7-7 7"/>
 			</svg>
-			<a href={ templ.SafeURL(fmt.Sprintf("/projects/%d", p.ID)) } class="font-medium hover:underline" @click.stop>{ p.Name }</a>
-			<span class="ml-auto text-sm text-gray-500">{ fmt.Sprint(p.OpenTasks()) } open · { fmt.Sprint(p.TotalTasks) } total</span>
-			<div class="w-24 bg-gray-200 rounded-full h-1.5 ml-3 flex-shrink-0">
-				<div class="bg-teal-600 h-1.5 rounded-full" style={ fmt.Sprintf("width:%d%%", p.ProgressPct()) }></div>
+			<a href={ templ.SafeURL(fmt.Sprintf("/projects/%d", p.ID)) }
+			   class="text-[15px] font-medium text-primary hover:underline"
+			   @click.stop>
+				{ p.Name }
+			</a>
+			<div class="ml-auto flex items-center gap-3">
+				<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">
+					{ fmt.Sprint(p.OpenTasks()) } open
+				</span>
+				<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">
+					{ fmt.Sprint(p.TotalTasks) } total
+				</span>
+				<div class="w-20 bg-outline rounded-full h-[3px] flex-shrink-0">
+					<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", p.ProgressPct()) }></div>
+				</div>
+				<span class="text-[11px] text-secondary tabular-nums w-7 text-right">{ fmt.Sprint(p.ProgressPct()) }%</span>
 			</div>
-			<span class="text-sm text-gray-400 w-8 text-right">{ fmt.Sprint(p.ProgressPct()) }%</span>
 		</button>
 		<div x-show="open" x-cloak>
 			<div
-				hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d", p.ID) }
-				hx-trigger="intersect once"
-				class="divide-y divide-gray-100 min-h-[1px]">
+			    hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d", p.ID) }
+			    hx-trigger="intersect once"
+			    class="divide-y divide-outline-hair border-t border-outline-hair min-h-[1px]">
 			</div>
-			<div class="px-4 py-2 border-t border-gray-100 flex items-center gap-4">
+			<div class="px-4 py-2 border-t border-outline-hair flex items-center gap-4">
 				<button
-					hx-get={ fmt.Sprintf("/partials/tasks/new?project_id=%d", p.ID) }
-					hx-target="#drawer-inner"
-					hx-swap="innerHTML"
-					@click="drawerOpen = true"
-					class="text-sm text-gray-500 hover:text-gray-900">
+				    hx-get={ fmt.Sprintf("/partials/tasks/new?project_id=%d", p.ID) }
+				    hx-target="#drawer-inner"
+				    hx-swap="innerHTML"
+				    @click="drawerOpen = true"
+				    class="text-[13px] text-secondary hover:text-primary">
 					+ Add task
 				</button>
 				<button
-					hx-get={ fmt.Sprintf("/partials/projects/%d/edit", p.ID) }
-					hx-target="#drawer-inner"
-					hx-swap="innerHTML"
-					@click="drawerOpen = true"
-					class="text-sm text-gray-500 hover:text-gray-900">
+				    hx-get={ fmt.Sprintf("/partials/projects/%d/edit", p.ID) }
+				    hx-target="#drawer-inner"
+				    hx-swap="innerHTML"
+				    @click="drawerOpen = true"
+				    class="text-[13px] text-secondary hover:text-primary">
 					Edit
 				</button>
 			</div>
