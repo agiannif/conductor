@@ -1,4 +1,4 @@
-.PHONY: help generate css build run test clean
+.PHONY: help generate css build run seed test clean
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-10s %s\n", $$1, $$2}'
@@ -14,6 +14,10 @@ build: generate css ## Build Docker image
 
 run: generate css ## Run locally for development (DB at ./conductor.db)
 	CONDUCTOR_DB_PATH=./conductor.db CONDUCTOR_SECURE_COOKIE=false go run ./cmd/conductor
+
+seed: ## Seed local development database with test data (overwrites conductor.db)
+	rm -f conductor.db conductor.db-shm conductor.db-wal
+	CONDUCTOR_DB_PATH=./conductor.db go run ./cmd/seed
 
 test: ## Run all tests
 	go test ./...
