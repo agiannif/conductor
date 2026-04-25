@@ -7,52 +7,106 @@ import (
 
 templ Project(layout LayoutData, project models.Project, tasks []models.Task, users []models.User) {
 	@Layout(layout) {
-		<div class="p-6">
-			<div class="flex items-center justify-between mb-2">
+		<div class="pt-8 px-14">
+			<!-- Breadcrumb -->
+			<nav class="text-[12px] text-secondary mb-2 flex items-center gap-1">
+				<a href="/" class="hover:text-primary">Projects</a>
+				<span class="text-on-surface-muted">/</span>
+				<span class="text-primary">{ project.Name }</span>
+			</nav>
+			<!-- Title + actions -->
+			<div class="flex items-start justify-between mb-4">
 				<div>
-					<a href="/" class="text-sm text-gray-500 hover:text-gray-700">← All projects</a>
-					<h1 class="text-2xl font-semibold mt-1">{ project.Name }</h1>
+					<h1 class="text-[26px] font-normal tracking-[-0.3px] text-primary">{ project.Name }</h1>
 					if project.Description != "" {
-						<p class="text-sm text-gray-500 mt-1">{ project.Description }</p>
+						<p class="text-[13px] text-secondary mt-0.5">{ project.Description }</p>
 					}
 				</div>
-				<div class="flex items-center gap-2">
+				<div class="flex items-center gap-2 mt-1">
 					<button
-						hx-get={ fmt.Sprintf("/partials/projects/%d/edit", project.ID) }
-						hx-target="#drawer-inner"
-						hx-swap="innerHTML"
-						@click="drawerOpen = true"
-						class="text-sm text-gray-600 border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50">
-						Edit project
+					    hx-get={ fmt.Sprintf("/partials/projects/%d/edit", project.ID) }
+					    hx-target="#drawer-inner"
+					    hx-swap="innerHTML"
+					    @click="drawerOpen = true"
+					    class="flex items-center gap-1.5 text-[13px] text-primary border border-outline px-3 py-[7px] rounded-md hover:bg-surface-sunken">
+						<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+						</svg>
+						Edit
 					</button>
 					<button
-						hx-get={ fmt.Sprintf("/partials/tasks/new?project_id=%d", project.ID) }
-						hx-target="#drawer-inner"
-						hx-swap="innerHTML"
-						@click="drawerOpen = true"
-						class="bg-teal-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-teal-800">
+					    hx-get={ fmt.Sprintf("/partials/tasks/new?project_id=%d", project.ID) }
+					    hx-target="#drawer-inner"
+					    hx-swap="innerHTML"
+					    @click="drawerOpen = true"
+					    class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1">
 						+ Add task
 					</button>
 				</div>
 			</div>
-			<!-- Status groups -->
-			@statusGroup("To do", models.StatusTodo, tasks)
-			@statusGroup("In progress", models.StatusInProgress, tasks)
-			@statusGroup("Blocked", models.StatusBlocked, tasks)
-			@statusGroup("Done", models.StatusDone, tasks)
+			<!-- Progress bar + summary + filter dropdowns -->
+			<div class="flex items-center gap-3 mb-7 px-4 py-3 bg-surface border border-outline rounded-lg">
+				<div class="w-28 bg-outline rounded-full h-[3px] flex-shrink-0">
+					<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", project.ProgressPct()) }></div>
+				</div>
+				<span class="text-[13px] text-secondary tabular-nums">{ fmt.Sprint(project.ProgressPct()) }%</span>
+				<span class="text-on-surface-muted">·</span>
+				<span class="text-[13px] text-secondary">{ fmt.Sprint(project.DoneTasks) } done · { fmt.Sprint(project.OpenTasks()) } open</span>
+				<div class="ml-auto flex items-center gap-2">
+					<select class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option>Assignee</option>
+						for _, u := range users {
+							<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
+						}
+					</select>
+					<select class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option>Priority</option>
+						<option value="critical">Critical</option>
+						<option value="high">High</option>
+						<option value="medium">Medium</option>
+						<option value="low">Low</option>
+					</select>
+					<select class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option>Due</option>
+						<option value="overdue">Overdue</option>
+						<option value="this_week">This week</option>
+					</select>
+				</div>
+			</div>
+			<!-- Status groups (empty groups are hidden) -->
+			@projectStatusGroup("To do", models.StatusTodo, tasks)
+			@projectStatusGroup("In progress", models.StatusInProgress, tasks)
+			@projectStatusGroup("Blocked", models.StatusBlocked, tasks)
+			@projectStatusGroup("Done", models.StatusDone, tasks)
 		</div>
 	}
 }
 
-templ statusGroup(label string, status models.Status, tasks []models.Task) {
-	<div class="mb-6">
-		<h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{ label }</h2>
-		<div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
-			for _, t := range tasks {
-				if t.Status == status {
-					@TaskRow(t)
+templ projectStatusGroup(label string, status models.Status, tasks []models.Task) {
+	if countByStatus(tasks, status) > 0 {
+		<div class="mb-7">
+			<div class="flex items-center gap-2 mb-2">
+				<h2 class="text-[12px] font-medium text-secondary uppercase tracking-[0.5px]">{ label }</h2>
+				<span class="text-[12px] text-on-surface-muted tabular-nums">{ fmt.Sprint(countByStatus(tasks, status)) }</span>
+			</div>
+			<div class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
+				for _, t := range tasks {
+					if t.Status == status {
+						@TaskRow(t)
+					}
 				}
-			}
+			</div>
 		</div>
-	</div>
+	}
+}
+
+func countByStatus(tasks []models.Task, status models.Status) int {
+	n := 0
+	for _, t := range tasks {
+		if t.Status == status {
+			n++
+		}
+	}
+	return n
 }
