@@ -137,5 +137,6 @@ func (h *Handler) layoutData(r *http.Request) templates.LayoutData {
 		ProjectCount: projectCount,
 		AllTaskCount: allTaskCount,
 		MyTaskCount:  myTaskCount,
+		CurrentPath:  r.URL.Path,
 	}
 }

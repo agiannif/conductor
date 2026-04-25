@@ -11,11 +11,12 @@ type LayoutData struct {
 	ProjectCount int
 	AllTaskCount int
 	MyTaskCount  int
+	CurrentPath  string
 }
 
 templ Layout(data LayoutData) {
 	<!DOCTYPE html>
-	<html lang="en" class="h-full bg-gray-50">
+	<html lang="en" class="h-full bg-neutral">
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -27,41 +28,60 @@ templ Layout(data LayoutData) {
 	<body class="h-full" x-data="{ drawerOpen: false, modalOpen: false }">
 		<div class="flex h-full">
 			<!-- Sidebar -->
-			<aside class="w-56 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
-				<div class="px-4 py-4 border-b border-gray-100">
-					<a href="/" class="text-lg font-semibold text-gray-900">conductor</a>
+			<aside class="w-[200px] flex-shrink-0 bg-surface-sunken border-r border-outline flex flex-col">
+				<div class="px-[10px] py-4">
+					<a href="/" class="text-[15px] font-medium text-primary">conductor<span class="text-tertiary">.</span></a>
 				</div>
-				<nav class="flex-1 px-3 py-3 space-y-1">
-					<a href="/" class="flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-gray-100">
-						<span>Projects</span>
-						<span class="text-xs text-gray-400">{ fmt.Sprint(data.ProjectCount) }</span>
+				<nav class="flex-1 px-[10px] py-[6px] space-y-[2px]">
+					<a href="/"
+					   class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
+					           templ.KV("bg-surface border border-outline text-primary", data.CurrentPath == "/"),
+					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/") }>
+						<span class="flex items-center gap-2">
+							@iconLayers()
+							Projects
+						</span>
+						<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.ProjectCount) }</span>
 					</a>
-					<a href="/tasks" class="flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-gray-100">
-						<span>All tasks</span>
-						<span class="text-xs text-gray-400">{ fmt.Sprint(data.AllTaskCount) }</span>
+					<a href="/tasks"
+					   class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
+					           templ.KV("bg-surface border border-outline text-primary", data.CurrentPath == "/tasks"),
+					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/tasks") }>
+						<span class="flex items-center gap-2">
+							@iconList()
+							All tasks
+						</span>
+						<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.AllTaskCount) }</span>
 					</a>
-					<a href="/tasks/mine" class="flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-gray-100">
-						<span>My tasks</span>
-						<span class="text-xs text-gray-400">{ fmt.Sprint(data.MyTaskCount) }</span>
+					<a href="/tasks/mine"
+					   class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
+					           templ.KV("bg-surface border border-outline text-primary", data.CurrentPath == "/tasks/mine"),
+					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/tasks/mine") }>
+						<span class="flex items-center gap-2">
+							@iconUser()
+							My tasks
+						</span>
+						<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.MyTaskCount) }</span>
 					</a>
 				</nav>
-				<!-- User roster -->
-				<div class="px-4 py-3 border-t border-gray-100">
-					<p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Team</p>
+				<!-- Household roster -->
+				<div class="px-[10px] py-3 border-t border-outline-hair">
+					<p class="text-[11px] font-medium text-on-surface-muted uppercase tracking-[0.5px] mb-2">Household</p>
 					for _, u := range data.Users {
-						<div class="flex items-center gap-2 py-1">
-							<div class="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-medium">
+						<div class="flex items-center gap-2 py-[3px]">
+							<div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
+							     style={ fmt.Sprintf("background-color:%s;color:%s", avatarFill(u.ID), avatarText(u.ID)) }>
 								if len(u.Username) > 0 {
 									{ string([]rune(u.Username)[:1]) }
 								}
 							</div>
-							<span class="text-sm text-gray-700">{ u.Username }</span>
+							<span class="text-[13px] text-primary">{ u.Username }</span>
 						</div>
 					}
 				</div>
-				<!-- Logout -->
-				<form method="POST" action="/logout" class="px-4 py-3 border-t border-gray-100">
-					<button type="submit" class="text-xs text-gray-400 hover:text-gray-700">Sign out</button>
+				<!-- Sign out -->
+				<form method="POST" action="/logout" class="px-[10px] py-3 border-t border-outline-hair">
+					<button type="submit" class="text-[11px] text-on-surface-muted hover:text-primary">Sign out</button>
 				</form>
 			</aside>
 			<!-- Main content -->
@@ -70,19 +90,57 @@ templ Layout(data LayoutData) {
 			</main>
 		</div>
 
-		<!-- Slide-out drawer (right side). HTMX loads form partials into #drawer-inner;
-		     server-rendered templ output is auto-escaped so stored user data is safe. -->
-		<div x-show="drawerOpen" x-cloak class="fixed inset-0 z-40">
-			<div class="absolute inset-0 bg-black/30" @click="drawerOpen = false"></div>
-			<div id="drawer-inner" class="absolute right-0 top-0 h-full w-96 bg-white shadow-xl overflow-y-auto"></div>
+		<!-- Side panel: 360px, right-pinned, never covers the 200px sidebar -->
+		<div x-show="drawerOpen" x-cloak
+		     class="fixed right-0 top-0 h-full w-[360px] z-30 bg-surface border-l border-outline shadow-[-8px_0_24px_rgba(0,0,0,0.04)] overflow-y-auto">
+			<div id="drawer-inner"></div>
 		</div>
 
-		<!-- Centered modal -->
+		<!-- Centered modal with ink scrim -->
 		<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center">
-			<div class="absolute inset-0 bg-black/30" @click="modalOpen = false"></div>
-			<div class="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4"
-				 id="modal-content"></div>
+			<div class="absolute inset-0 bg-[rgba(28,26,23,0.4)]" @click="modalOpen = false"></div>
+			<div class="relative bg-surface rounded-lg shadow-[0_12px_40px_rgba(0,0,0,0.18)] p-[22px] w-[340px] mx-4"
+			     id="modal-content"></div>
 		</div>
 	</body>
 	</html>
+}
+
+// avatarHues maps user IDs to hues in the oklch(0.78 0.055 hue) band per DESIGN.md.
+var avatarHues = []int{14, 210, 60, 150, 300, 330}
+
+func avatarFill(userID int64) string {
+	hue := avatarHues[int((userID-1)%int64(len(avatarHues)))]
+	return fmt.Sprintf("oklch(0.78 0.055 %d)", hue)
+}
+
+func avatarText(userID int64) string {
+	hue := avatarHues[int((userID-1)%int64(len(avatarHues)))]
+	return fmt.Sprintf("oklch(0.28 0.04 %d)", hue)
+}
+
+templ iconLayers() {
+	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+		<polygon points="12 2 2 7 12 12 22 7 12 2"/>
+		<polyline points="2 17 12 22 22 17"/>
+		<polyline points="2 12 12 17 22 12"/>
+	</svg>
+}
+
+templ iconList() {
+	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+		<line x1="8" y1="6" x2="21" y2="6"/>
+		<line x1="8" y1="12" x2="21" y2="12"/>
+		<line x1="8" y1="18" x2="21" y2="18"/>
+		<line x1="3" y1="6" x2="3.01" y2="6"/>
+		<line x1="3" y1="12" x2="3.01" y2="12"/>
+		<line x1="3" y1="18" x2="3.01" y2="18"/>
+	</svg>
+}
+
+templ iconUser() {
+	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+		<circle cx="12" cy="7" r="4"/>
+	</svg>
 }
