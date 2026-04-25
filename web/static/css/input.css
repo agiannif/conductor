@@ -1,4 +1,25 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #1c1a17;
+  --color-secondary: #78746e;
+  --color-tertiary: #3f6b5d;
+  --color-tertiary-hover: #2f5a4d;
+  --color-tertiary-container: #ecf2ef;
+  --color-neutral: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f5f5f4;
+  --color-outline: #e7e5e4;
+  --color-outline-hair: #efede9;
+  --color-on-surface-muted: #a8a29a;
+  --color-warning: #8a6b20;
+  --color-warning-container: #fbf3e4;
+  --color-warning-outline: #ecddb8;
+  --color-danger: #a13f3f;
+  --color-success: #2f5a4d;
+  --color-success-container: #eaf1ee;
+  --color-success-outline: #cfe0d7;
+}
+
 /* Hide Alpine x-cloak elements until Alpine initialises */
 [x-cloak] { display: none !important; }
