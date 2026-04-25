@@ -85,7 +85,11 @@ func (h *Handler) postDeleteProject(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	count, _ := h.db.ProjectTaskCount(id)
+	count, err := h.db.ProjectTaskCount(id)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
 	if count > 0 {
 		w.WriteHeader(http.StatusConflict)
 		_ = templates.ProjectDeleteError(count).Render(r.Context(), w)
@@ -124,14 +128,14 @@ func (h *Handler) getProjectEditForm(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) layoutData(r *http.Request) templates.LayoutData {
 	user := currentUser(r)
 	users, _ := h.db.ListUsers()
-	projects, _ := h.db.ListProjects()
-	allTasks, _ := h.db.ListTasks(models.TaskFilters{})
-	myTasks, _ := h.db.ListTasks(models.TaskFilters{AssigneeID: user.ID})
+	projectCount, _ := h.db.CountProjects()
+	allTaskCount, _ := h.db.CountTasks(models.TaskFilters{})
+	myTaskCount, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID})
 	return templates.LayoutData{
 		User:         user,
 		Users:        users,
-		ProjectCount: len(projects),
-		AllTaskCount: len(allTasks),
-		MyTaskCount:  len(myTasks),
+		ProjectCount: projectCount,
+		AllTaskCount: allTaskCount,
+		MyTaskCount:  myTaskCount,
 	}
 }

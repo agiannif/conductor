@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -157,12 +158,11 @@ func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	// Validate the task exists before toggling; ToggleTask silently succeeds on missing rows.
-	if _, err := h.db.GetTask(id); err != nil {
-		http.NotFound(w, r)
-		return
-	}
 	if err := h.db.ToggleTask(id); err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

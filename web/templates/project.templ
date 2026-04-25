@@ -50,26 +50,7 @@ templ statusGroup(label string, status models.Status, tasks []models.Task) {
 		<div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
 			for _, t := range tasks {
 				if t.Status == status {
-					<div id={ fmt.Sprintf("task-%d", t.ID) }
-						 class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
-						 hx-get={ fmt.Sprintf("/partials/tasks/%d", t.ID) }
-						 hx-target="#drawer-inner"
-						 hx-swap="innerHTML"
-						 hx-trigger="click[!event.target.closest('input')]"
-						 @click="drawerOpen = true">
-						<input type="checkbox"
-							checked?={ t.Status == models.StatusDone }
-							hx-post={ fmt.Sprintf("/tasks/%d/toggle", t.ID) }
-							hx-target={ fmt.Sprintf("#task-%d", t.ID) }
-							hx-swap="outerHTML"
-							class="rounded border-gray-300"/>
-						<span class={ "flex-1 text-sm", templ.KV("line-through text-gray-400", t.Status == models.StatusDone) }>{ t.Title }</span>
-						if t.AssigneeName != "" {
-							<div class="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs flex-shrink-0">
-								{ string([]rune(t.AssigneeName)[:1]) }
-							</div>
-						}
-					</div>
+					@TaskRow(t)
 				}
 			}
 		</div>

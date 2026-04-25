@@ -90,17 +90,21 @@ func runAdmin(args []string) {
 	}
 }
 
+func hashPassword(password string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("bcrypt: %v", err)
+	}
+	return string(hash)
+}
+
 func adminAddUser(database *db.DB, args []string) {
 	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: conductor admin add-user <username> <password>")
 		os.Exit(1)
 	}
 	username, password := args[0], args[1]
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatalf("add user: %v", err)
-	}
-	id, err := database.CreateUser(username, string(hash))
+	id, err := database.CreateUser(username, hashPassword(password))
 	if err != nil {
 		log.Fatalf("add user: %v", err)
 	}
@@ -139,11 +143,7 @@ func adminResetPassword(database *db.DB, args []string) {
 	} else if err != nil {
 		log.Fatalf("get user: %v", err)
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatalf("reset password: %v", err)
-	}
-	if err := database.UpdateUserPassword(user.ID, string(hash)); err != nil {
+	if err := database.UpdateUserPassword(user.ID, hashPassword(newPassword)); err != nil {
 		log.Fatalf("reset password: %v", err)
 	}
 	fmt.Printf("password reset for user %q\n", username)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"conductor/internal/db"
 	"conductor/internal/models"
 )
 
@@ -34,7 +35,7 @@ func (h *Handler) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 			HttpOnly: true,
 			Secure:   h.secureCookie,
 			SameSite: http.SameSiteStrictMode,
-			MaxAge:   30 * 24 * 60 * 60,
+			MaxAge:   int(db.SessionTTL.Seconds()),
 		})
 
 		user, _, err := h.db.GetUserByID(session.UserID)

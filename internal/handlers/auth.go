@@ -109,7 +109,7 @@ func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   h.secureCookie,
 		SameSite: http.SameSiteStrictMode,
-		MaxAge:   30 * 24 * 60 * 60, // 30 days — matches DB session sliding window
+		MaxAge:   int(db.SessionTTL.Seconds()),
 	})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

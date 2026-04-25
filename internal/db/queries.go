@@ -15,6 +15,9 @@ import (
 // ErrNotFound is returned by Get* methods when a row does not exist.
 var ErrNotFound = errors.New("not found")
 
+// SessionTTL is the duration for which a session is valid (sliding window).
+const SessionTTL = 30 * 24 * time.Hour
+
 // priorityOrder is the SQL CASE expression for ordering tasks by priority.
 const priorityOrder = `CASE priority
 	WHEN 'critical' THEN 1
@@ -106,7 +109,7 @@ func (d *DB) CreateSession(userID int64) (string, error) {
 		return "", fmt.Errorf("rand: %w", err)
 	}
 	token := hex.EncodeToString(b)
-	expiresAt := time.Now().Add(30 * 24 * time.Hour)
+	expiresAt := time.Now().Add(SessionTTL)
 	_, err := d.sql.Exec(
 		`INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`,
 		token, userID, expiresAt,
@@ -127,7 +130,7 @@ func (d *DB) GetSession(token string) (models.Session, error) {
 }
 
 func (d *DB) ExtendSession(token string) error {
-	expiresAt := time.Now().Add(30 * 24 * time.Hour)
+	expiresAt := time.Now().Add(SessionTTL)
 	_, err := d.sql.Exec(
 		`UPDATE sessions SET expires_at = ? WHERE id = ?`,
 		expiresAt, token,
@@ -170,7 +173,7 @@ func (d *DB) GetProject(id int64) (models.Project, error) {
 		GROUP BY p.id
 	`, id).Scan(&p.ID, &p.Name, &p.Description, &p.CreatedAt, &p.TotalTasks, &p.DoneTasks)
 	if errors.Is(err, sql.ErrNoRows) {
-		return p, fmt.Errorf("project not found")
+		return p, fmt.Errorf("project not found: %w", ErrNotFound)
 	}
 	return p, err
 }
@@ -225,6 +228,36 @@ func (d *DB) ProjectTaskCount(id int64) (int, error) {
 	return count, err
 }
 
+func (d *DB) CountProjects() (int, error) {
+	var count int
+	err := d.sql.QueryRow(`SELECT COUNT(*) FROM projects`).Scan(&count)
+	return count, err
+}
+
+// CountTasks returns the number of tasks matching the given filters.
+func (d *DB) CountTasks(f models.TaskFilters) (int, error) {
+	where := []string{"1=1"}
+	args := []any{}
+
+	if f.ProjectID != 0 {
+		where = append(where, "project_id = ?")
+		args = append(args, f.ProjectID)
+	}
+	if f.Status != "" {
+		where = append(where, "status = ?")
+		args = append(args, f.Status)
+	}
+	if f.AssigneeID != 0 {
+		where = append(where, "assignee_id = ?")
+		args = append(args, f.AssigneeID)
+	}
+
+	var count int
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM tasks WHERE %s`, strings.Join(where, " AND "))
+	err := d.sql.QueryRow(query, args...).Scan(&count)
+	return count, err
+}
+
 // ---- Tasks ----
 
 type CreateTaskParams struct {
@@ -266,7 +299,9 @@ func (d *DB) CreateTask(p CreateTaskParams) (int64, error) {
 	return res.LastInsertId()
 }
 
-func (d *DB) GetTask(id int64) (models.Task, error) {
+// scanTask scans a task row (with joined project/assignee/creator columns)
+// from any scanner. Both GetTask and ListTasks share this logic.
+func scanTask(scan func(...any) error) (models.Task, error) {
 	var t models.Task
 	var assigneeID sql.NullInt64
 	var assigneeName sql.NullString
@@ -274,20 +309,7 @@ func (d *DB) GetTask(id int64) (models.Task, error) {
 	var createdByName sql.NullString
 	var dueDate sql.NullTime
 
-	err := d.sql.QueryRow(`
-		SELECT t.id, t.title, COALESCE(t.description,''), COALESCE(t.link,''),
-		       t.status, t.category, t.priority,
-		       t.project_id, p.name,
-		       t.assignee_id, a.username,
-		       t.due_date,
-		       t.created_by, u.username,
-		       t.created_at, t.updated_at
-		FROM tasks t
-		JOIN projects p ON p.id = t.project_id
-		LEFT JOIN users a ON a.id = t.assignee_id
-		LEFT JOIN users u ON u.id = t.created_by
-		WHERE t.id = ?
-	`, id).Scan(
+	if err := scan(
 		&t.ID, &t.Title, &t.Description, &t.Link,
 		&t.Status, &t.Category, &t.Priority,
 		&t.ProjectID, &t.ProjectName,
@@ -295,11 +317,7 @@ func (d *DB) GetTask(id int64) (models.Task, error) {
 		&dueDate,
 		&createdBy, &createdByName,
 		&t.CreatedAt, &t.UpdatedAt,
-	)
-	if errors.Is(err, sql.ErrNoRows) {
-		return t, fmt.Errorf("task not found")
-	}
-	if err != nil {
+	); err != nil {
 		return t, err
 	}
 	if assigneeID.Valid {
@@ -314,6 +332,28 @@ func (d *DB) GetTask(id int64) (models.Task, error) {
 		t.CreatedByName = createdByName.String
 	}
 	return t, nil
+}
+
+func (d *DB) GetTask(id int64) (models.Task, error) {
+	row := d.sql.QueryRow(`
+		SELECT t.id, t.title, COALESCE(t.description,''), COALESCE(t.link,''),
+		       t.status, t.category, t.priority,
+		       t.project_id, p.name,
+		       t.assignee_id, a.username,
+		       t.due_date,
+		       t.created_by, u.username,
+		       t.created_at, t.updated_at
+		FROM tasks t
+		JOIN projects p ON p.id = t.project_id
+		LEFT JOIN users a ON a.id = t.assignee_id
+		LEFT JOIN users u ON u.id = t.created_by
+		WHERE t.id = ?
+	`, id)
+	t, err := scanTask(row.Scan)
+	if errors.Is(err, sql.ErrNoRows) {
+		return t, fmt.Errorf("task not found: %w", ErrNotFound)
+	}
+	return t, err
 }
 
 // ListTasks returns tasks matching the given filters, sorted by due_date asc (nulls last), then priority.
@@ -377,34 +417,9 @@ func (d *DB) ListTasks(f models.TaskFilters) ([]models.Task, error) {
 
 	var tasks []models.Task
 	for rows.Next() {
-		var t models.Task
-		var assigneeID sql.NullInt64
-		var assigneeName sql.NullString
-		var createdBy sql.NullInt64
-		var createdByName sql.NullString
-		var dueDate sql.NullTime
-
-		if err := rows.Scan(
-			&t.ID, &t.Title, &t.Description, &t.Link,
-			&t.Status, &t.Category, &t.Priority,
-			&t.ProjectID, &t.ProjectName,
-			&assigneeID, &assigneeName,
-			&dueDate,
-			&createdBy, &createdByName,
-			&t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		t, err := scanTask(rows.Scan)
+		if err != nil {
 			return nil, err
-		}
-		if assigneeID.Valid {
-			t.AssigneeID = &assigneeID.Int64
-			t.AssigneeName = assigneeName.String
-		}
-		if dueDate.Valid {
-			t.DueDate = &dueDate.Time
-		}
-		if createdBy.Valid {
-			t.CreatedBy = &createdBy.Int64
-			t.CreatedByName = createdByName.String
 		}
 		tasks = append(tasks, t)
 	}
@@ -438,14 +453,20 @@ func (d *DB) DeleteTask(id int64) error {
 // in progress, blocked) becomes done; done becomes todo. This is intentionally
 // lossy — a task that was "in progress" will be "todo" after un-toggling.
 func (d *DB) ToggleTask(id int64) error {
-	_, err := d.sql.Exec(`
+	res, err := d.sql.Exec(`
 		UPDATE tasks SET status = CASE
 			WHEN status = 'done' THEN 'todo'
 			ELSE 'done'
 		END
 		WHERE id = ?`, id,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("task not found: %w", ErrNotFound)
+	}
+	return nil
 }
 
 func (d *DB) ListCategories() ([]string, error) {
