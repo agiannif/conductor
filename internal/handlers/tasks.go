@@ -243,6 +243,22 @@ func (h *Handler) getTaskEditForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) getTaskDeleteConfirm(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	task, err := h.db.GetTask(id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if err := templates.TaskDeleteConfirm(task).Render(r.Context(), w); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
+}
+
 // parseTaskFilters reads common task filter query/form parameters.
 func parseTaskFilters(r *http.Request) models.TaskFilters {
 	f := models.TaskFilters{}

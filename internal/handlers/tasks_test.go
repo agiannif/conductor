@@ -182,3 +182,29 @@ func TestDeleteTask(t *testing.T) {
 		t.Error("want task to be deleted, but GetTask returned no error")
 	}
 }
+
+func TestGetTaskDeleteConfirm(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("My Project", "")
+	taskID, _ := database.CreateTask(db.CreateTaskParams{
+		Title:     "Doomed task",
+		Status:    models.StatusTodo,
+		Priority:  models.PriorityLow,
+		ProjectID: projectID,
+		CreatedBy: userID,
+	})
+
+	req := httptest.NewRequest("GET", fmt.Sprintf("/partials/tasks/%d/delete-confirm", taskID), nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("want 200, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "Delete this task?") {
+		t.Errorf("response missing expected heading; body: %s", w.Body.String())
+	}
+}

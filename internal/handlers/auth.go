@@ -62,6 +62,7 @@ func (h *Handler) routes() *http.ServeMux {
 	mux.HandleFunc("GET /partials/tasks/new", h.requireAuth(h.getTaskForm))
 	mux.HandleFunc("GET /partials/tasks/{id}", h.requireAuth(h.getTaskDetail))
 	mux.HandleFunc("GET /partials/tasks/{id}/edit", h.requireAuth(h.getTaskEditForm))
+	mux.HandleFunc("GET /partials/tasks/{id}/delete-confirm", h.requireAuth(h.getTaskDeleteConfirm))
 	mux.HandleFunc("GET /partials/projects/new", h.requireAuth(h.getProjectForm))
 	mux.HandleFunc("GET /partials/projects/{id}/edit", h.requireAuth(h.getProjectEditForm))
 
