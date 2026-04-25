@@ -3,74 +3,70 @@ package templates
 import (
 	"conductor/internal/models"
 	"fmt"
+	"time"
 )
 
 // AllTasks renders the full all-tasks page with filter controls and HTMX task list.
 templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project, users []models.User, filters models.TaskFilters) {
 	@Layout(layout) {
-		<div class="p-6">
-			<div class="flex items-center justify-between mb-6">
-				<h1 class="text-2xl font-semibold">All tasks</h1>
+		<div class="pt-8 px-14">
+			<div class="flex items-center justify-between mb-5">
+				<h1 class="text-[28px] font-normal tracking-[-0.4px] text-primary">All tasks</h1>
 				<button
-					hx-get="/partials/tasks/new"
-					hx-target="#drawer-inner"
-					hx-swap="innerHTML"
-					@click="drawerOpen = true"
-					class="bg-teal-700 text-white px-4 py-2 rounded text-sm font-medium hover:bg-teal-800">
+				    hx-get="/partials/tasks/new"
+				    hx-target="#drawer-inner"
+				    hx-swap="innerHTML"
+				    @click="drawerOpen = true"
+				    class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1">
 					+ Add task
 				</button>
 			</div>
 			<form
-				method="GET"
-				action="/tasks"
-				hx-get="/partials/tasks"
-				hx-target="#task-list"
-				hx-swap="innerHTML"
-				hx-trigger="change"
-				class="flex flex-wrap gap-2 mb-4">
-				<!-- Project filter -->
-				<select name="project_id" class="text-sm border border-gray-200 rounded px-2 py-1.5 bg-white">
+			    method="GET"
+			    action="/tasks"
+			    hx-get="/partials/tasks"
+			    hx-target="#task-list"
+			    hx-swap="innerHTML"
+			    hx-trigger="change"
+			    class="flex flex-wrap gap-2 mb-4">
+				<select name="project_id" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
 					<option value="">All projects</option>
 					for _, p := range projects {
 						<option value={ fmt.Sprint(p.ID) } selected?={ filters.ProjectID == p.ID }>{ p.Name }</option>
 					}
 				</select>
-				<!-- Status filter -->
-				<select name="status" class="text-sm border border-gray-200 rounded px-2 py-1.5 bg-white">
+				<select name="status" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
 					<option value="">All statuses</option>
 					<option value="todo" selected?={ filters.Status == "todo" }>Todo</option>
 					<option value="in progress" selected?={ filters.Status == "in progress" }>In progress</option>
 					<option value="blocked" selected?={ filters.Status == "blocked" }>Blocked</option>
 					<option value="done" selected?={ filters.Status == "done" }>Done</option>
 				</select>
-				<!-- Priority filter -->
-				<select name="priority" class="text-sm border border-gray-200 rounded px-2 py-1.5 bg-white">
+				<select name="priority" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
 					<option value="">All priorities</option>
 					<option value="critical" selected?={ filters.Priority == "critical" }>Critical</option>
 					<option value="high" selected?={ filters.Priority == "high" }>High</option>
 					<option value="medium" selected?={ filters.Priority == "medium" }>Medium</option>
 					<option value="low" selected?={ filters.Priority == "low" }>Low</option>
 				</select>
-				<!-- Assignee filter -->
-				<select name="assignee_id" class="text-sm border border-gray-200 rounded px-2 py-1.5 bg-white">
+				<select name="assignee_id" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
 					<option value="">Anyone</option>
 					for _, u := range users {
 						<option value={ fmt.Sprint(u.ID) } selected?={ filters.AssigneeID == u.ID }>{ u.Username }</option>
 					}
 				</select>
-				<!-- Due filter -->
-				<select name="due" class="text-sm border border-gray-200 rounded px-2 py-1.5 bg-white">
+				<select name="due" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
 					<option value="">Any due date</option>
 					<option value="overdue" selected?={ filters.Due == "overdue" }>Overdue</option>
 					<option value="this_week" selected?={ filters.Due == "this_week" }>This week</option>
 					<option value="this_month" selected?={ filters.Due == "this_month" }>This month</option>
 				</select>
-				<button type="submit" class="text-sm border border-gray-200 rounded px-3 py-1.5 bg-white hover:bg-gray-50">Filter</button>
-				<a href="/tasks" class="text-sm text-gray-500 hover:text-gray-900 px-2 py-1.5">Clear</a>
+				<button type="submit" class="text-[13px] border border-outline rounded-sm px-3 py-[6px] bg-surface text-secondary hover:bg-surface-sunken">Filter</button>
+				<a href="/tasks" class="text-[13px] text-secondary hover:text-primary px-2 py-[6px]">Clear</a>
 			</form>
-			<div id="task-list" class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+			<div id="task-list" class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
 				if len(tasks) == 0 {
-					<p class="text-sm text-gray-500 px-4 py-6">No tasks match your filters.</p>
+					<p class="text-[13px] text-secondary px-4 py-6">No tasks match your filters.</p>
 				} else {
 					@TaskRows(tasks)
 				}
@@ -79,18 +75,107 @@ templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project
 	}
 }
 
-// MyTasks renders the current-user task page.
+// MyTasks renders the current-user task page grouped by urgency.
 templ MyTasks(layout LayoutData, tasks []models.Task) {
 	@Layout(layout) {
-		<div class="p-6">
-			<h1 class="text-2xl font-semibold mb-6">My tasks</h1>
-			<div class="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
-				if len(tasks) == 0 {
-					<p class="text-sm text-gray-500 px-4 py-6">You have no tasks.</p>
-				} else {
-					@TaskRows(tasks)
+		<div class="pt-8 px-14">
+			<div class="flex items-center gap-3 mb-1">
+				<div class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-medium flex-shrink-0"
+				     style={ fmt.Sprintf("background-color:%s;color:%s", avatarFill(layout.User.ID), avatarText(layout.User.ID)) }>
+					if len(layout.User.Username) > 0 {
+						{ string([]rune(layout.User.Username)[:1]) }
+					}
+				</div>
+				<h1 class="text-[28px] font-normal tracking-[-0.4px] text-primary">My tasks</h1>
+			</div>
+			<p class="text-[13px] text-secondary mb-6">
+				{ fmt.Sprint(countOpenTasks(tasks)) } open across { fmt.Sprint(countDistinctProjects(tasks)) } projects
+			</p>
+			if len(tasks) == 0 {
+				<p class="text-[13px] text-secondary">You have no tasks.</p>
+			} else {
+				@myTaskSection("Overdue", "overdue", tasks)
+				@myTaskSection("This week", "this_week", tasks)
+				@myTaskSection("Later", "later", tasks)
+			}
+		</div>
+	}
+}
+
+templ myTaskSection(label, bucket string, tasks []models.Task) {
+	if hasTasksInBucket(tasks, bucket) {
+		<div class="mb-7">
+			<div class="flex items-center gap-2 mb-2">
+				<h2 class={ "text-[12px] font-medium uppercase tracking-[0.5px]",
+				            templ.KV("text-danger", bucket == "overdue"),
+				            templ.KV("text-secondary", bucket != "overdue") }>
+					{ label }
+				</h2>
+				<span class="text-[12px] text-on-surface-muted tabular-nums">{ fmt.Sprint(countTasksInBucket(tasks, bucket)) }</span>
+			</div>
+			<div class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
+				for _, t := range tasks {
+					if taskIsInBucket(t, bucket) {
+						@taskRowFull(t)
+					}
 				}
 			</div>
 		</div>
 	}
+}
+
+func taskIsInBucket(t models.Task, bucket string) bool {
+	if t.Status == models.StatusDone {
+		return false
+	}
+	switch bucket {
+	case "overdue":
+		return t.IsOverdue()
+	case "this_week":
+		if t.IsOverdue() || t.DueDate == nil {
+			return false
+		}
+		return !t.DueDate.After(time.Now().Add(7 * 24 * time.Hour))
+	default: // "later"
+		return !t.IsOverdue() && (t.DueDate == nil || t.DueDate.After(time.Now().Add(7*24*time.Hour)))
+	}
+}
+
+func hasTasksInBucket(tasks []models.Task, bucket string) bool {
+	for _, t := range tasks {
+		if taskIsInBucket(t, bucket) {
+			return true
+		}
+	}
+	return false
+}
+
+func countTasksInBucket(tasks []models.Task, bucket string) int {
+	n := 0
+	for _, t := range tasks {
+		if taskIsInBucket(t, bucket) {
+			n++
+		}
+	}
+	return n
+}
+
+func countOpenTasks(tasks []models.Task) int {
+	n := 0
+	for _, t := range tasks {
+		if t.Status != models.StatusDone {
+			n++
+		}
+	}
+	return n
+}
+
+func countDistinctProjects(tasks []models.Task) int {
+	seen := make(map[int64]bool)
+	for _, t := range tasks {
+		if t.Status != models.StatusDone {
+			seen[t.ProjectID] = true
+		}
+	}
+	return len(seen)
 }
