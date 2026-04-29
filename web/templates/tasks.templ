@@ -9,7 +9,7 @@ import (
 // AllTasks renders the full all-tasks page with filter controls and HTMX task list.
 templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project, users []models.User, filters models.TaskFilters) {
 	@Layout(layout) {
-		<div class="pt-8 px-14">
+		<div class="pt-5 px-4 sm:pt-8 sm:px-14">
 			<div class="flex items-center justify-between mb-5">
 				<h1 class="text-[28px] font-normal tracking-[-0.4px] text-primary">All tasks</h1>
 				<button
@@ -21,7 +21,7 @@ templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project
 					+ Add task
 				</button>
 			</div>
-			<form method="GET" action="/tasks" class="flex flex-wrap gap-2 mb-4">
+			<form method="GET" action="/tasks" class="hidden sm:flex flex-wrap gap-2 mb-4">
 				<select name="project_id" @change="$el.form.submit()"
 				        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
 					<option value="">All projects</option>
@@ -75,7 +75,7 @@ templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project
 // MyTasks renders the current-user task page grouped by urgency.
 templ MyTasks(layout LayoutData, tasks []models.Task) {
 	@Layout(layout) {
-		<div class="pt-8 px-14">
+		<div class="pt-5 px-4 sm:pt-8 sm:px-14">
 			<div class="flex items-center gap-3 mb-1">
 				<div class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-medium flex-shrink-0"
 				     style={ fmt.Sprintf("background-color:%s;color:%s", avatarFill(layout.User.ID), avatarText(layout.User.ID)) }>

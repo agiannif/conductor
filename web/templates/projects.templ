@@ -7,7 +7,7 @@ import (
 
 templ Projects(layout LayoutData, projects []models.Project, users []models.User, filters models.TaskFilters) {
 	@Layout(layout) {
-		<div class="pt-8 px-14">
+		<div class="pt-5 px-4 sm:pt-8 sm:px-14">
 			<div class="flex items-center justify-between mb-5">
 				<h1 class="text-[28px] font-normal tracking-[-0.4px] text-primary">All projects</h1>
 				<button
@@ -21,10 +21,11 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 			</div>
 			<!-- Toolbar: expand all + filter -->
 			<div x-data="{ allExpanded: false }"
-			     class="flex items-center gap-3 mb-4 flex-wrap">
+			     class="hidden sm:flex items-center gap-3 mb-4 flex-wrap">
 				<button
 				    @click="allExpanded = !allExpanded; $dispatch('projects-toggle-all', { open: allExpanded })"
-				    class="text-[13px] text-secondary hover:text-primary">
+				    class="text-[13px] text-secondary hover:text-primary"
+				    x-text="allExpanded ? 'Collapse all' : 'Expand all'">
 					Expand all
 				</button>
 				<span class="text-on-surface-muted text-[13px]">·</span>
@@ -81,12 +82,19 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 			     viewBox="0 0 24 24" fill="none" stroke="currentColor">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 5l7 7-7 7"/>
 			</svg>
-			<a href={ templ.SafeURL(fmt.Sprintf("/projects/%d", p.ID)) }
-			   class="text-[15px] font-medium text-primary hover:underline"
-			   @click.stop>
-				{ p.Name }
-			</a>
-			<div class="ml-auto flex items-center gap-3">
+			<div class="flex-1 min-w-0 text-left">
+				<a href={ templ.SafeURL(fmt.Sprintf("/projects/%d", p.ID)) }
+				   class="text-[15px] font-medium text-primary hover:underline"
+				   @click.stop>
+					{ p.Name }
+				</a>
+				<!-- Mobile stats row below project name -->
+				<p class="sm:hidden text-[11px] text-secondary mt-0.5">
+					{ fmt.Sprint(p.OpenTasks()) } open · { fmt.Sprint(p.TotalTasks) } total
+				</p>
+			</div>
+			<!-- Desktop stats -->
+			<div class="hidden sm:flex items-center gap-3">
 				<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">
 					{ fmt.Sprint(p.OpenTasks()) } open
 				</span>
@@ -96,8 +104,9 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 				<div class="w-20 bg-outline rounded-full h-[3px] flex-shrink-0">
 					<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", p.ProgressPct()) }></div>
 				</div>
-				<span class="text-[11px] text-secondary tabular-nums w-7 text-right">{ fmt.Sprint(p.ProgressPct()) }%</span>
 			</div>
+			<!-- Percentage: always visible -->
+			<span class="text-[11px] text-secondary tabular-nums w-7 text-right flex-shrink-0">{ fmt.Sprint(p.ProgressPct()) }%</span>
 		</button>
 		<div x-show="open" x-cloak>
 			<div
@@ -111,7 +120,7 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 				    hx-target="#drawer-inner"
 				    hx-swap="innerHTML"
 				    @click="drawerOpen = true"
-				    class="text-[13px] text-secondary hover:text-primary">
+				    class="text-[13px] font-medium text-tertiary hover:text-tertiary-hover">
 					+ Add task
 				</button>
 				<button
@@ -119,7 +128,7 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 				    hx-target="#drawer-inner"
 				    hx-swap="innerHTML"
 				    @click="drawerOpen = true"
-				    class="text-[13px] text-secondary hover:text-primary">
+				    class="text-[13px] font-medium text-tertiary hover:text-tertiary-hover">
 					Edit
 				</button>
 			</div>

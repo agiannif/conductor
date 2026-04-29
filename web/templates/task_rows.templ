@@ -55,28 +55,32 @@ templ taskRowFull(t models.Task) {
 			{ t.Title }
 		</span>
 		<div class="flex items-center gap-2 flex-shrink-0">
-			if t.Link != "" {
-				<svg class="w-3 h-3 text-on-surface-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-					<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-				</svg>
-			}
-			@statusPill(t.Status)
-			if t.Category != "" {
-				<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5 whitespace-nowrap flex-shrink-0">{ t.Category }</span>
-			}
-			<div class="flex-shrink-0 w-[60px]">
-				if t.DueDate != nil {
-					<span
-						class={ "flex items-center gap-1 text-[11px] tabular-nums whitespace-nowrap",
-					              templ.KV("text-danger", t.IsOverdue()),
-					              templ.KV("text-secondary", !t.IsOverdue()) }
-					>
-						@iconCalendar()
-						{ t.DueDate.Format("Jan 2") }
-					</span>
+			<!-- Desktop-only meta: hidden on mobile -->
+			<div class="hidden sm:flex items-center gap-2">
+				if t.Link != "" {
+					<svg class="w-3 h-3 text-on-surface-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+						<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+					</svg>
 				}
+				@statusPill(t.Status)
+				if t.Category != "" {
+					<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5 whitespace-nowrap flex-shrink-0">{ t.Category }</span>
+				}
+				<div class="flex-shrink-0 w-[60px]">
+					if t.DueDate != nil {
+						<span
+							class={ "flex items-center gap-1 text-[11px] tabular-nums whitespace-nowrap",
+						              templ.KV("text-danger", t.IsOverdue()),
+						              templ.KV("text-secondary", !t.IsOverdue()) }
+						>
+							@iconCalendar()
+							{ t.DueDate.Format("Jan 2") }
+						</span>
+					}
+				</div>
 			</div>
+			<!-- Avatar: always visible -->
 			<div class="flex-shrink-0 w-6 h-6">
 				if t.AssigneeName != "" {
 					<div
@@ -119,29 +123,33 @@ templ taskRowWithProject(t models.Task) {
 			{ t.Title }
 		</span>
 		<div class="flex items-center gap-2 flex-shrink-0">
-			if t.Link != "" {
-				<svg class="w-3 h-3 text-on-surface-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-					<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-				</svg>
-			}
-			<span class="text-[11px] text-secondary truncate flex-shrink-0 max-w-[100px]">{ t.ProjectName }</span>
-			@statusPill(t.Status)
-			if t.Category != "" {
-				<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5 whitespace-nowrap flex-shrink-0">{ t.Category }</span>
-			}
-			<div class="flex-shrink-0 w-[60px]">
-				if t.DueDate != nil {
-					<span
-						class={ "flex items-center gap-1 text-[11px] tabular-nums whitespace-nowrap",
-					              templ.KV("text-danger", t.IsOverdue()),
-					              templ.KV("text-secondary", !t.IsOverdue()) }
-					>
-						@iconCalendar()
-						{ t.DueDate.Format("Jan 2") }
-					</span>
+			<!-- Desktop-only meta: hidden on mobile -->
+			<div class="hidden sm:flex items-center gap-2">
+				if t.Link != "" {
+					<svg class="w-3 h-3 text-on-surface-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+						<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+					</svg>
 				}
+				<span class="text-[11px] text-secondary truncate flex-shrink-0 max-w-[100px]">{ t.ProjectName }</span>
+				@statusPill(t.Status)
+				if t.Category != "" {
+					<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5 whitespace-nowrap flex-shrink-0">{ t.Category }</span>
+				}
+				<div class="flex-shrink-0 w-[60px]">
+					if t.DueDate != nil {
+						<span
+							class={ "flex items-center gap-1 text-[11px] tabular-nums whitespace-nowrap",
+						              templ.KV("text-danger", t.IsOverdue()),
+						              templ.KV("text-secondary", !t.IsOverdue()) }
+						>
+							@iconCalendar()
+							{ t.DueDate.Format("Jan 2") }
+						</span>
+					}
+				</div>
 			</div>
+			<!-- Avatar: always visible -->
 			<div class="flex-shrink-0 w-6 h-6">
 				if t.AssigneeName != "" {
 					<div
@@ -183,7 +191,7 @@ templ myTaskRow(t models.Task) {
 		>
 			{ t.Title }
 		</span>
-		<div class="flex items-center gap-2 flex-shrink-0">
+		<div class="hidden sm:flex items-center gap-2 flex-shrink-0">
 			<span class="text-[11px] text-secondary truncate flex-shrink-0 max-w-[130px]">{ t.ProjectName }</span>
 			@statusPill(t.Status)
 			<div class="flex-shrink-0 w-[60px]">
@@ -205,11 +213,11 @@ templ myTaskRow(t models.Task) {
 templ statusPill(s models.Status) {
 	switch s {
 		case models.StatusInProgress:
-			<span class="text-[11px] text-warning bg-warning-container rounded-full px-2 leading-5 flex-shrink-0 whitespace-nowrap">in progress</span>
+			<span class="text-[11px] text-warning bg-warning-container border border-transparent rounded-full px-2 leading-5 flex-shrink-0 whitespace-nowrap">in progress</span>
 		case models.StatusDone:
-			<span class="text-[11px] text-success bg-success-container rounded-full px-2 leading-5 flex-shrink-0">done</span>
+			<span class="text-[11px] text-success bg-success-container border border-transparent rounded-full px-2 leading-5 flex-shrink-0">done</span>
 		case models.StatusBlocked:
-			<span class="text-[11px] text-danger bg-[rgba(161,63,63,0.1)] rounded-full px-2 leading-5 flex-shrink-0">blocked</span>
+			<span class="text-[11px] text-danger bg-[rgba(161,63,63,0.1)] border border-transparent rounded-full px-2 leading-5 flex-shrink-0">blocked</span>
 		default:
 			<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5 flex-shrink-0">todo</span>
 	}

@@ -195,7 +195,7 @@ The palette is built around a warm-neutral surface stack, a single accent for ac
 
 - **Primary `#1c1a17` — Ink.** The darkest value, used for headlines, body text on light backgrounds, and the dark scrim on modals. Never used as a fill behind text.
 - **Secondary `#78746e` — Stone.** Metadata, captions, inactive labels, secondary icon strokes. Pairs with primary on neutral backgrounds.
-- **Tertiary `#3f6b5d` — Forest.** The single accent. Used for primary buttons, progress bars (when work is happening), checked checkboxes, links inside panels, and the dot at the end of the wordmark. Never decorative — every appearance signals action or progress.
+- **Tertiary `#3f6b5d` — Forest.** The single accent. Used for primary buttons, progress bars (when work is happening), checked checkboxes, and links inside panels. Never decorative — every appearance signals action or progress.
 - **Tertiary container `#ecf2ef`.** The wash behind active filter chips and selected task rows. The lightest possible echo of forest.
 - **Neutral `#fafafa` — Page.** The app background. Slightly warm so it does not read as gray-blue.
 - **Surface `#ffffff` — Card.** Project containers, panels, modals, inputs.
@@ -224,7 +224,7 @@ One family — **Inter** — at conservative weights (400 for body and headlines
 - **Label-caps 12 / 500 / +0.5 tracking / uppercase.** Section headers ("To do", "In progress", "Done", "Overdue", "This week").
 - **Numeric.** Any time digits stand alone (counts beside nav items, percentages, dates), apply `font-feature-settings: "tnum"` so columns line up.
 
-Headlines use lowercase or sentence case; never title case. The wordmark is `conductor.` lowercase with a forest-green period.
+Headlines use lowercase or sentence case; never title case. The wordmark is `conductor` lowercase.
 
 ## Layout
 
