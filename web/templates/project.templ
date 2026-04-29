@@ -46,7 +46,7 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 				</div>
 			</div>
 			<!-- Progress bar + summary + filter dropdowns -->
-			<div class="flex items-center gap-3 mb-7 px-4 py-3 bg-surface border border-outline rounded-lg">
+			<div class="flex items-center gap-3 mb-7 px-4 py-3 bg-surface border border-outline rounded">
 				<div class="w-28 bg-outline rounded-full h-[3px] flex-shrink-0">
 					<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", project.ProgressPct()) }></div>
 				</div>
@@ -98,7 +98,7 @@ templ projectStatusGroup(label string, status models.Status, tasks []models.Task
 				<h2 class="text-[12px] font-medium text-secondary uppercase tracking-[0.5px]">{ label }</h2>
 				<span class="text-[12px] text-on-surface-muted tabular-nums">{ fmt.Sprint(countByStatus(tasks, status)) }</span>
 			</div>
-			<div class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
+			<div class="bg-surface border border-outline rounded divide-y divide-outline-hair">
 				for _, t := range tasks {
 					if t.Status == status {
 						@TaskRow(t)

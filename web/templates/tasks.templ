@@ -61,7 +61,7 @@ templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project
 				</select>
 				<a href="/tasks" class="text-[13px] text-secondary hover:text-primary px-2 py-1">Clear</a>
 			</form>
-			<div id="task-list" class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
+			<div id="task-list" class="bg-surface border border-outline rounded divide-y divide-outline-hair">
 				if len(tasks) == 0 {
 					<p class="text-[13px] text-secondary px-4 py-6">No tasks match your filters.</p>
 				} else {
@@ -110,7 +110,7 @@ templ myTaskSection(label, bucket string, tasks []models.Task) {
 				</h2>
 				<span class="text-[12px] text-on-surface-muted tabular-nums">{ fmt.Sprint(countTasksInBucket(tasks, bucket)) }</span>
 			</div>
-			<div class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
+			<div class="bg-surface border border-outline rounded divide-y divide-outline-hair">
 				for _, t := range tasks {
 					if taskIsInBucket(t, bucket) {
 						@myTaskRow(t)

@@ -24,22 +24,26 @@ templ taskDetailContent(task models.Task) {
 		<span class="text-[11px] font-medium text-on-surface-muted uppercase tracking-[0.5px]">Task</span>
 		<button @click="drawerOpen = false" class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
 			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-				<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+				<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
 			</svg>
 		</button>
 	</div>
 	<!-- Checkbox + title + description -->
 	<div class="px-5 py-4 border-b border-outline-hair">
 		<div class="flex items-start gap-3">
-			<input type="checkbox"
-			       checked?={ task.Status == models.StatusDone }
-			       hx-post={ fmt.Sprintf("/tasks/%d/toggle", task.ID) }
-			       hx-target={ fmt.Sprintf("#task-%d", task.ID) }
-			       hx-swap="outerHTML"
-			       class="mt-1 rounded-[3px] border-outline accent-tertiary flex-shrink-0"/>
-			<h2 class={ "text-[18px] font-medium leading-snug",
+			<input
+				type="checkbox"
+				checked?={ task.Status == models.StatusDone }
+				hx-post={ fmt.Sprintf("/tasks/%d/toggle", task.ID) }
+				hx-target={ fmt.Sprintf("#task-%d", task.ID) }
+				hx-swap="outerHTML"
+				class="w-4 h-4 mt-1 rounded-[3px] border-outline accent-tertiary flex-shrink-0"
+			/>
+			<h2
+				class={ "text-[18px] font-medium leading-snug",
 			            templ.KV("line-through text-secondary", task.Status == models.StatusDone),
-			            templ.KV("text-primary", task.Status != models.StatusDone) }>
+			            templ.KV("text-primary", task.Status != models.StatusDone) }
+			>
 				{ task.Title }
 			</h2>
 		</div>
@@ -74,8 +78,10 @@ templ taskDetailContent(task models.Task) {
 			<div class="flex items-center gap-3">
 				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Assignee</span>
 				<span class="flex items-center gap-2">
-					<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium"
-					      style={ fmt.Sprintf("background-color:%s;color:%s", avatarFillByID(task.AssigneeID), avatarTextByID(task.AssigneeID)) }>
+					<span
+						class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium"
+						style={ fmt.Sprintf("background-color:%s;color:%s", avatarFillByID(task.AssigneeID), avatarTextByID(task.AssigneeID)) }
+					>
 						{ string([]rune(task.AssigneeName)[:1]) }
 					</span>
 					<span class="text-[13px] text-primary">{ task.AssigneeName }</span>
@@ -85,9 +91,11 @@ templ taskDetailContent(task models.Task) {
 		if task.DueDate != nil {
 			<div class="flex items-center gap-3">
 				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Due</span>
-				<span class={ "flex items-center gap-1.5 text-[13px]",
+				<span
+					class={ "flex items-center gap-1.5 text-[13px]",
 				              templ.KV("text-danger", task.IsOverdue()),
-				              templ.KV("text-primary", !task.IsOverdue()) }>
+				              templ.KV("text-primary", !task.IsOverdue()) }
+				>
 					@iconCalendar()
 					{ task.DueDate.Format("Jan 2, 2006") }
 					if task.IsOverdue() {
@@ -99,9 +107,12 @@ templ taskDetailContent(task models.Task) {
 		if task.Link != "" {
 			<div class="flex items-center gap-3">
 				<span class="w-20 text-[13px] text-secondary flex-shrink-0">Link</span>
-				<a href={ templ.SafeURL(task.Link) }
-				   class="text-[13px] text-tertiary hover:underline truncate"
-				   target="_blank" rel="noopener">
+				<a
+					href={ templ.SafeURL(task.Link) }
+					class="text-[13px] text-tertiary hover:underline truncate"
+					target="_blank"
+					rel="noopener"
+				>
 					{ task.Link }
 				</a>
 			</div>
@@ -117,25 +128,27 @@ templ taskDetailContent(task models.Task) {
 	<!-- Footer actions -->
 	<div class="flex items-center justify-between px-5 py-4">
 		<button
-		    hx-get={ fmt.Sprintf("/partials/tasks/%d/edit", task.ID) }
-		    hx-target="#drawer-inner"
-		    hx-swap="innerHTML"
-		    class="flex items-center gap-1.5 text-[13px] text-primary border border-outline px-3 py-[7px] rounded-md hover:bg-surface-sunken">
+			hx-get={ fmt.Sprintf("/partials/tasks/%d/edit", task.ID) }
+			hx-target="#drawer-inner"
+			hx-swap="innerHTML"
+			class="flex items-center gap-1.5 text-[13px] text-primary border border-outline px-3 py-[7px] rounded-md hover:bg-surface-sunken"
+		>
 			<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-				<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+				<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+				<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
 			</svg>
 			Edit
 		</button>
 		<button
-		    hx-get={ fmt.Sprintf("/partials/tasks/%d/delete-confirm", task.ID) }
-		    hx-target="#modal-content"
-		    hx-swap="innerHTML"
-		    @click="modalOpen = true"
-		    class="flex items-center gap-1.5 text-[13px] text-danger hover:opacity-70">
+			hx-get={ fmt.Sprintf("/partials/tasks/%d/delete-confirm", task.ID) }
+			hx-target="#modal-content"
+			hx-swap="innerHTML"
+			@click="modalOpen = true"
+			class="flex items-center gap-1.5 text-[13px] text-danger hover:opacity-70"
+		>
 			<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="3 6 5 6 21 6"/>
-				<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+				<polyline points="3 6 5 6 21 6"></polyline>
+				<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
 			</svg>
 			Delete
 		</button>
@@ -149,14 +162,17 @@ templ TaskDeleteConfirm(task models.Task) {
 		"{ task.Title }" will be permanently removed. This cannot be undone.
 	</p>
 	<div class="flex justify-end gap-2">
-		<button @click="modalOpen = false"
-		        class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken">
+		<button
+			@click="modalOpen = false"
+			class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
+		>
 			Cancel
 		</button>
 		<button
-		    hx-post={ fmt.Sprintf("/tasks/%d/delete", task.ID) }
-		    @click="modalOpen = false"
-		    class="px-3 py-[7px] text-[13px] bg-danger text-white rounded-md hover:opacity-90 font-medium">
+			hx-post={ fmt.Sprintf("/tasks/%d/delete", task.ID) }
+			@click="modalOpen = false"
+			class="px-3 py-[7px] text-[13px] bg-danger text-white rounded-md hover:opacity-90 font-medium"
+		>
 			Delete task
 		</button>
 	</div>

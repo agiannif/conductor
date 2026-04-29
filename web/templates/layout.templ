@@ -17,92 +17,105 @@ type LayoutData struct {
 templ Layout(data LayoutData) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-full bg-neutral">
-	<head>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<title>conductor</title>
-		<link rel="stylesheet" href="/static/css/style.css"/>
-		<script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
-		<script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
-	</head>
-	<body class="h-full" x-data="{ drawerOpen: false, modalOpen: false }">
-		<div class="flex h-full">
-			<!-- Sidebar -->
-			<aside class="w-[200px] flex-shrink-0 bg-surface-sunken border-r border-outline flex flex-col">
-				<div class="px-[10px] py-4">
-					<a href="/" class="text-[15px] font-medium text-primary">conductor<span class="text-tertiary">.</span></a>
-				</div>
-				<nav class="flex-1 px-[10px] py-[6px] space-y-[2px]">
-					<a href="/"
-					   class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>conductor</title>
+			<link rel="stylesheet" href="/static/css/style.css"/>
+			<script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+			<script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
+		</head>
+		<body class="h-full" x-data="{ drawerOpen: false, modalOpen: false }">
+			<div class="flex h-full">
+				<!-- Sidebar -->
+				<aside class="w-[200px] flex-shrink-0 bg-surface-sunken border-r border-outline flex flex-col">
+					<div class="px-[10px] py-4">
+						<a href="/" class="text-[15px] font-medium text-primary">conductor<span class="text-tertiary">.</span></a>
+					</div>
+					<nav class="flex-1 px-[10px] py-[6px] space-y-[2px]">
+						<a
+							href="/"
+							class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
 					           templ.KV("bg-surface border border-outline text-primary", data.CurrentPath == "/"),
-					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/") }>
-						<span class="flex items-center gap-2">
-							@iconLayers()
-							Projects
-						</span>
-						<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.ProjectCount) }</span>
-					</a>
-					<a href="/tasks"
-					   class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
+					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/") }
+						>
+							<span class="flex items-center gap-2">
+								@iconLayers()
+								Projects
+							</span>
+							<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.ProjectCount) }</span>
+						</a>
+						<a
+							href="/tasks"
+							class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
 					           templ.KV("bg-surface border border-outline text-primary", data.CurrentPath == "/tasks"),
-					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/tasks") }>
-						<span class="flex items-center gap-2">
-							@iconList()
-							All tasks
-						</span>
-						<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.AllTaskCount) }</span>
-					</a>
-					<a href="/tasks/mine"
-					   class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
+					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/tasks") }
+						>
+							<span class="flex items-center gap-2">
+								@iconList()
+								All tasks
+							</span>
+							<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.AllTaskCount) }</span>
+						</a>
+						<a
+							href="/tasks/mine"
+							class={ "flex items-center justify-between px-2 py-[6px] text-[13px] rounded-sm",
 					           templ.KV("bg-surface border border-outline text-primary", data.CurrentPath == "/tasks/mine"),
-					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/tasks/mine") }>
-						<span class="flex items-center gap-2">
-							@iconUser()
-							My tasks
-						</span>
-						<span id="sidebar-my-task-count" class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.MyTaskCount) }</span>
-					</a>
-				</nav>
-				<!-- Household roster -->
-				<div class="px-[10px] py-3 border-t border-outline-hair">
-					<p class="text-[11px] font-medium text-on-surface-muted uppercase tracking-[0.5px] mb-2">Household</p>
-					for _, u := range data.Users {
-						<div class="flex items-center gap-2 py-[3px]">
-							<div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
-							     style={ fmt.Sprintf("background-color:%s;color:%s", avatarFill(u.ID), avatarText(u.ID)) }>
-								if len(u.Username) > 0 {
-									{ string([]rune(u.Username)[:1]) }
-								}
+					           templ.KV("text-secondary hover:bg-surface hover:text-primary", data.CurrentPath != "/tasks/mine") }
+						>
+							<span class="flex items-center gap-2">
+								@iconUser()
+								My tasks
+							</span>
+							<span id="sidebar-my-task-count" class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.MyTaskCount) }</span>
+						</a>
+					</nav>
+					<!-- Household roster -->
+					<div class="px-[10px] py-3 border-t border-outline-hair">
+						<p class="text-[11px] font-medium text-on-surface-muted uppercase tracking-[0.5px] mb-2">Household</p>
+						for _, u := range data.Users {
+							<div class="flex items-center gap-2 py-[3px]">
+								<div
+									class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
+									style={ fmt.Sprintf("background-color:%s;color:%s", avatarFill(u.ID), avatarText(u.ID)) }
+								>
+									if len(u.Username) > 0 {
+										{ string([]rune(u.Username)[:1]) }
+									}
+								</div>
+								<span class="text-[13px] text-primary">{ u.Username }</span>
 							</div>
-							<span class="text-[13px] text-primary">{ u.Username }</span>
-						</div>
-					}
-				</div>
-				<!-- Sign out -->
-				<form method="POST" action="/logout" class="px-[10px] py-3 border-t border-outline-hair">
-					<button type="submit" class="text-[11px] text-on-surface-muted hover:text-primary">Sign out</button>
-				</form>
-			</aside>
-			<!-- Main content -->
-			<main class="flex-1 overflow-auto">
-				{ children... }
-			</main>
-		</div>
-
-		<!-- Side panel: 360px, right-pinned, never covers the 200px sidebar -->
-		<div x-show="drawerOpen" x-cloak
-		     class="fixed right-0 top-0 h-full w-[360px] z-30 bg-surface border-l border-outline shadow-[-8px_0_24px_rgba(0,0,0,0.04)] overflow-y-auto">
-			<div id="drawer-inner"></div>
-		</div>
-
-		<!-- Centered modal with ink scrim -->
-		<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center">
-			<div class="absolute inset-0 bg-[rgba(28,26,23,0.4)]" @click="modalOpen = false"></div>
-			<div class="relative bg-surface rounded-lg shadow-[0_12px_40px_rgba(0,0,0,0.18)] p-[22px] w-[340px] mx-4"
-			     id="modal-content"></div>
-		</div>
-	</body>
+						}
+					</div>
+					<!-- Sign out -->
+					<form method="POST" action="/logout" class="px-[10px] py-3 border-t border-outline-hair">
+						<button type="submit" class="text-[11px] text-on-surface-muted hover:text-primary">Sign out</button>
+					</form>
+				</aside>
+				<!-- Main content -->
+				<main class="flex-1 overflow-auto">
+					<div class="max-w-7xl">
+						{ children... }
+					</div>
+				</main>
+			</div>
+			<!-- Side panel: 360px, right-pinned, never covers the 200px sidebar -->
+			<div
+				x-show="drawerOpen"
+				x-cloak
+				class="fixed right-0 top-0 h-full w-[360px] z-30 bg-surface border-l border-outline shadow-[-8px_0_24px_rgba(0,0,0,0.04)] overflow-y-auto"
+			>
+				<div id="drawer-inner"></div>
+			</div>
+			<!-- Centered modal with ink scrim -->
+			<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center">
+				<div class="absolute inset-0 bg-[rgba(28,26,23,0.4)]" @click="modalOpen = false"></div>
+				<div
+					class="relative bg-surface rounded-lg shadow-[0_12px_40px_rgba(0,0,0,0.18)] p-[22px] w-[340px] mx-4"
+					id="modal-content"
+				></div>
+			</div>
+		</body>
 	</html>
 }
 
@@ -127,26 +140,26 @@ func avatarText(userID int64) string {
 
 templ iconLayers() {
 	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-		<polygon points="12 2 2 7 12 12 22 7 12 2"/>
-		<polyline points="2 17 12 22 22 17"/>
-		<polyline points="2 12 12 17 22 12"/>
+		<polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+		<polyline points="2 17 12 22 22 17"></polyline>
+		<polyline points="2 12 12 17 22 12"></polyline>
 	</svg>
 }
 
 templ iconList() {
 	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-		<line x1="8" y1="6" x2="21" y2="6"/>
-		<line x1="8" y1="12" x2="21" y2="12"/>
-		<line x1="8" y1="18" x2="21" y2="18"/>
-		<line x1="3" y1="6" x2="3.01" y2="6"/>
-		<line x1="3" y1="12" x2="3.01" y2="12"/>
-		<line x1="3" y1="18" x2="3.01" y2="18"/>
+		<line x1="8" y1="6" x2="21" y2="6"></line>
+		<line x1="8" y1="12" x2="21" y2="12"></line>
+		<line x1="8" y1="18" x2="21" y2="18"></line>
+		<line x1="3" y1="6" x2="3.01" y2="6"></line>
+		<line x1="3" y1="12" x2="3.01" y2="12"></line>
+		<line x1="3" y1="18" x2="3.01" y2="18"></line>
 	</svg>
 }
 
 templ iconUser() {
 	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-		<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-		<circle cx="12" cy="7" r="4"/>
+		<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+		<circle cx="12" cy="7" r="4"></circle>
 	</svg>
 }

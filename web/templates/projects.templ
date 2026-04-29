@@ -72,9 +72,9 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 }
 
 templ projectCard(p models.Project, filters models.TaskFilters) {
-	<div class="bg-surface border border-outline rounded-lg" x-data="{ open: false }"
+	<div class="bg-surface border border-outline rounded" x-data="{ open: false }"
 	     @projects-toggle-all.window="open = $event.detail.open">
-		<button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-sunken rounded-t-lg"
+		<button class="w-full flex items-center gap-3 px-4 py-3 text-left bg-surface-sunken hover:bg-outline-hair rounded-t"
 		        @click="open = !open">
 			<svg class="w-4 h-4 text-on-surface-muted flex-shrink-0 transition-transform duration-150"
 			     :class="{ 'rotate-90': open }"
