@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-templ Projects(layout LayoutData, projects []models.Project) {
+templ Projects(layout LayoutData, projects []models.Project, users []models.User, filters models.TaskFilters) {
 	@Layout(layout) {
 		<div class="pt-8 px-14">
 			<div class="flex items-center justify-between mb-5">
@@ -19,34 +19,59 @@ templ Projects(layout LayoutData, projects []models.Project) {
 					+ Create project
 				</button>
 			</div>
-			<!-- Toolbar: expand all + filter (filter is UI-only for now) -->
-			<div x-data="{ allExpanded: false }" class="flex items-center gap-3 mb-4">
+			<!-- Toolbar: expand all + filter -->
+			<div x-data="{ allExpanded: false }"
+			     class="flex items-center gap-3 mb-4 flex-wrap">
 				<button
 				    @click="allExpanded = !allExpanded; $dispatch('projects-toggle-all', { open: allExpanded })"
 				    class="text-[13px] text-secondary hover:text-primary">
 					Expand all
 				</button>
 				<span class="text-on-surface-muted text-[13px]">·</span>
-				<button class="text-[13px] text-secondary hover:text-primary flex items-center gap-1">
-					Filter
-					<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-						<polyline points="6 9 12 15 18 9"/>
-					</svg>
-				</button>
+				<form method="GET" action="/" class="flex items-center gap-2">
+					<select name="assignee_id" @change="$el.form.submit()"
+					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option value="">Assignee</option>
+						for _, u := range users {
+							if filters.AssigneeID == u.ID {
+								<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
+							} else {
+								<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
+							}
+						}
+					</select>
+					<select name="priority" @change="$el.form.submit()"
+					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option value="">Priority</option>
+						@projectsFilterOption("critical", "Critical", filters.Priority)
+						@projectsFilterOption("high", "High", filters.Priority)
+						@projectsFilterOption("medium", "Medium", filters.Priority)
+						@projectsFilterOption("low", "Low", filters.Priority)
+					</select>
+					<select name="due" @change="$el.form.submit()"
+					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option value="">Due</option>
+						@projectsFilterOption("overdue", "Overdue", filters.Due)
+						@projectsFilterOption("this_week", "This week", filters.Due)
+					</select>
+					if filters.AssigneeID != 0 || filters.Priority != "" || filters.Due != "" {
+						<a href="/" class="text-[13px] text-secondary hover:text-primary">Clear</a>
+					}
+				</form>
 			</div>
 			if len(projects) == 0 {
 				<p class="text-secondary text-[13px]">No projects yet.</p>
 			}
 			<div class="space-y-3">
 				for _, p := range projects {
-					@projectCard(p)
+					@projectCard(p, filters)
 				}
 			</div>
 		</div>
 	}
 }
 
-templ projectCard(p models.Project) {
+templ projectCard(p models.Project, filters models.TaskFilters) {
 	<div class="bg-surface border border-outline rounded-lg" x-data="{ open: false }"
 	     @projects-toggle-all.window="open = $event.detail.open">
 		<button class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-sunken rounded-t-lg"
@@ -76,7 +101,7 @@ templ projectCard(p models.Project) {
 		</button>
 		<div x-show="open" x-cloak>
 			<div
-			    hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d", p.ID) }
+			    hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d%s", p.ID, projectsFiltersQuery(filters)) }
 			    hx-trigger="intersect once"
 			    class="divide-y divide-outline-hair border-t border-outline-hair min-h-[1px]">
 			</div>
@@ -100,4 +125,27 @@ templ projectCard(p models.Project) {
 			</div>
 		</div>
 	</div>
+}
+
+templ projectsFilterOption(value, label, current string) {
+	if value == current {
+		<option value={ value } selected>{ label }</option>
+	} else {
+		<option value={ value }>{ label }</option>
+	}
+}
+
+
+func projectsFiltersQuery(f models.TaskFilters) string {
+	s := ""
+	if f.AssigneeID != 0 {
+		s += fmt.Sprintf("&assignee_id=%d", f.AssigneeID)
+	}
+	if f.Priority != "" {
+		s += "&priority=" + f.Priority
+	}
+	if f.Due != "" {
+		s += "&due=" + f.Due
+	}
+	return s
 }

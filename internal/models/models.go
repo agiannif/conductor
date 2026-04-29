@@ -83,10 +83,11 @@ func (t Task) IsOverdue() bool {
 
 // TaskFilters holds the filter parameters for task list queries.
 type TaskFilters struct {
-	ProjectID  int64
-	Status     string
-	Category   string
-	Priority   string
-	AssigneeID int64
-	Due        string // "overdue", "this_week", "this_month", ""
+	ProjectID   int64
+	Status      string
+	Category    string
+	Priority    string
+	AssigneeID  int64
+	Due         string // "overdue", "this_week", "this_month", ""
+	ExcludeDone bool   // exclude tasks with status = 'done'
 }

@@ -2,6 +2,7 @@ package templates
 
 import (
 	"conductor/internal/models"
+	"encoding/json"
 	"fmt"
 )
 
@@ -9,6 +10,7 @@ type TaskFormData struct {
 	Task                 *models.Task
 	Projects             []models.Project
 	Users                []models.User
+	Categories           []string
 	PreselectedProjectID int64
 }
 
@@ -98,22 +100,41 @@ templ taskFormFields(data TaskFormData) {
 			}
 		</select>
 	</div>
-	<!-- Category with new-value warning -->
-	<div x-data="{ catVal: '', isNew: false }" class="space-y-2">
+	<!-- Category with autocomplete dropdown and new-value warning -->
+	<div x-data="{ catVal: '', isNew: false, existing: [], showSugg: false, filtered: [] }"
+	     x-init="existing = JSON.parse($el.dataset.cats || '[]'); catVal = $refs.catInput.dataset.initval || ''; filtered = existing; isNew = catVal.length > 0 && !existing.includes(catVal)"
+	     data-cats={ categoriesToJSON(data.Categories) }
+	     class="space-y-2 relative">
 		<label for="category" class="block text-[13px] font-medium text-primary mb-1">Category</label>
 		<input type="text" id="category" name="category"
+		       x-ref="catInput"
 		       x-model="catVal"
-		       @input="isNew = catVal.length > 0"
-		       value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
+		       @focus="filtered = catVal ? existing.filter(c => c.toLowerCase().startsWith(catVal.toLowerCase())) : existing; showSugg = filtered.length > 0"
+		       @input="filtered = existing.filter(c => c.toLowerCase().startsWith(catVal.toLowerCase())); showSugg = filtered.length > 0; isNew = catVal.length > 0 && !existing.includes(catVal)"
+		       @keydown.escape="showSugg = false"
+		       @blur="setTimeout(() => showSugg = false, 200)"
+		       data-initval={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
+		       autocomplete="off"
 		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
 		       placeholder="e.g. errands, bookings"/>
+		<!-- Custom suggestion dropdown (replaces native datalist to avoid browser styling issues) -->
+		<div x-show="showSugg" x-cloak
+		     class="absolute z-10 left-0 right-0 bg-surface border border-outline rounded-sm shadow-sm mt-0.5 max-h-[160px] overflow-y-auto">
+			<template x-for="cat in filtered" :key="cat">
+				<button type="button"
+				        @mousedown.prevent="catVal = cat; showSugg = false; isNew = false"
+				        class="block w-full text-left px-[10px] py-[7px] text-[13px] text-primary hover:bg-surface-sunken truncate"
+				        x-text="cat">
+				</button>
+			</template>
+		</div>
 		<div x-show="isNew" x-cloak
 		     class="flex items-start gap-2 bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px]">
 			<span class="text-[13px] text-warning flex-1">
 				"<span x-text="catVal"></span>" is a new category — confirm?
 			</span>
 			<button type="button" @click="isNew = false" class="text-[13px] font-medium text-warning hover:opacity-70 flex-shrink-0">Confirm</button>
-			<button type="button" @click="catVal = ''; isNew = false; $el.closest('div').querySelector('input').value = ''" class="text-[13px] text-secondary hover:text-primary flex-shrink-0">Cancel</button>
+			<button type="button" @click="catVal = ''; isNew = false" class="text-[13px] text-secondary hover:text-primary flex-shrink-0">Cancel</button>
 		</div>
 	</div>
 	<!-- Project (create only; disabled on edit) -->
@@ -192,6 +213,8 @@ templ statusOption(s models.Status, task *models.Task) {
 templ priorityOption(p models.Priority, task *models.Task) {
 	if task != nil && task.Priority == p {
 		<option value={ string(p) } selected>{ string(p) }</option>
+	} else if task == nil && p == models.PriorityMedium {
+		<option value={ string(p) } selected>{ string(p) }</option>
 	} else {
 		<option value={ string(p) }>{ string(p) }</option>
 	}
@@ -209,4 +232,12 @@ func taskDueDateStr(task *models.Task) string {
 		return ""
 	}
 	return task.DueDate.Format("2006-01-02")
+}
+
+func categoriesToJSON(cats []string) string {
+	if len(cats) == 0 {
+		return "[]"
+	}
+	b, _ := json.Marshal(cats)
+	return string(b)
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-templ Project(layout LayoutData, project models.Project, tasks []models.Task, users []models.User) {
+templ Project(layout LayoutData, project models.Project, tasks []models.Task, users []models.User, filters models.TaskFilters) {
 	@Layout(layout) {
 		<div class="pt-8 px-14">
 			<!-- Breadcrumb -->
@@ -53,26 +53,34 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 				<span class="text-[13px] text-secondary tabular-nums">{ fmt.Sprint(project.ProgressPct()) }%</span>
 				<span class="text-on-surface-muted">·</span>
 				<span class="text-[13px] text-secondary">{ fmt.Sprint(project.DoneTasks) } done · { fmt.Sprint(project.OpenTasks()) } open</span>
-				<div class="ml-auto flex items-center gap-2">
-					<select class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
-						<option>Assignee</option>
+				<form method="GET" action={ templ.SafeURL(fmt.Sprintf("/projects/%d", project.ID)) }
+				      class="ml-auto flex items-center gap-2">
+					<select name="assignee_id" @change="$el.form.submit()"
+					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option value="">Assignee</option>
 						for _, u := range users {
-							<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
+							if filters.AssigneeID == u.ID {
+								<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
+							} else {
+								<option value={ fmt.Sprint(u.ID) }>{ u.Username }</option>
+							}
 						}
 					</select>
-					<select class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
-						<option>Priority</option>
-						<option value="critical">Critical</option>
-						<option value="high">High</option>
-						<option value="medium">Medium</option>
-						<option value="low">Low</option>
+					<select name="priority" @change="$el.form.submit()"
+					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option value="">Priority</option>
+						@projectFilterOption("critical", "Critical", filters.Priority)
+						@projectFilterOption("high", "High", filters.Priority)
+						@projectFilterOption("medium", "Medium", filters.Priority)
+						@projectFilterOption("low", "Low", filters.Priority)
 					</select>
-					<select class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
-						<option>Due</option>
-						<option value="overdue">Overdue</option>
-						<option value="this_week">This week</option>
+					<select name="due" @change="$el.form.submit()"
+					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+						<option value="">Due</option>
+						@projectFilterOption("overdue", "Overdue", filters.Due)
+						@projectFilterOption("this_week", "This week", filters.Due)
 					</select>
-				</div>
+				</form>
 			</div>
 			<!-- Status groups (empty groups are hidden) -->
 			@projectStatusGroup("To do", models.StatusTodo, tasks)
@@ -98,6 +106,14 @@ templ projectStatusGroup(label string, status models.Status, tasks []models.Task
 				}
 			</div>
 		</div>
+	}
+}
+
+templ projectFilterOption(value, label, current string) {
+	if value == current {
+		<option value={ value } selected>{ label }</option>
+	} else {
+		<option value={ value }>{ label }</option>
 	}
 }
 

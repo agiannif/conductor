@@ -251,6 +251,9 @@ func (d *DB) CountTasks(f models.TaskFilters) (int, error) {
 		where = append(where, "assignee_id = ?")
 		args = append(args, f.AssigneeID)
 	}
+	if f.ExcludeDone {
+		where = append(where, "status != 'done'")
+	}
 
 	var count int
 	query := fmt.Sprintf(`SELECT COUNT(*) FROM tasks WHERE %s`, strings.Join(where, " AND "))

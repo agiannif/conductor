@@ -11,6 +11,7 @@ import (
 	"conductor/internal/db"
 	"conductor/internal/models"
 	"conductor/web/templates"
+	"github.com/a-h/templ"
 )
 
 func (h *Handler) getAllTasks(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +150,13 @@ func (h *Handler) postDeleteTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/projects/%d", task.ProjectID), http.StatusSeeOther)
+	dest := fmt.Sprintf("/projects/%d", task.ProjectID)
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", dest)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther)
 }
 
 func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
@@ -171,9 +178,22 @@ func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	if err := templates.TaskRow(task).Render(r.Context(), w); err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+	var row templ.Component
+	switch r.URL.Query().Get("ctx") {
+	case "all_tasks":
+		row = templates.TaskRowWithProject(task)
+	case "my_tasks":
+		row = templates.MyTaskRow(task)
+	default:
+		row = templates.TaskRow(task)
 	}
+	if err := row.Render(r.Context(), w); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	// OOB update: if the sidebar is showing this task, refresh it too.
+	// HTMX silently ignores the OOB swap when #task-detail-{id} isn't in the DOM.
+	_ = templates.TaskDetailOOB(task).Render(r.Context(), w)
 }
 
 func (h *Handler) getTaskRows(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +203,15 @@ func (h *Handler) getTaskRows(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	if err := templates.TaskRows(tasks).Render(r.Context(), w); err != nil {
+	// When called with a project_id the tasks are shown within a project card (no project name needed).
+	// Without project_id it's the All Tasks flat list where project context must be visible.
+	var rows templ.Component
+	if filters.ProjectID != 0 {
+		rows = templates.TaskRows(tasks)
+	} else {
+		rows = templates.TaskRowsWithProject(tasks)
+	}
+	if err := rows.Render(r.Context(), w); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 }
@@ -195,9 +223,11 @@ func (h *Handler) getTaskForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	users, _ := h.db.ListUsers()
+	categories, _ := h.db.ListCategories()
 	data := templates.TaskFormData{
-		Projects: projects,
-		Users:    users,
+		Projects:   projects,
+		Users:      users,
+		Categories: categories,
 	}
 	if pidStr := r.URL.Query().Get("project_id"); pidStr != "" {
 		if pid, err := strconv.ParseInt(pidStr, 10, 64); err == nil {
@@ -238,7 +268,8 @@ func (h *Handler) getTaskEditForm(w http.ResponseWriter, r *http.Request) {
 	}
 	projects, _ := h.db.ListProjects()
 	users, _ := h.db.ListUsers()
-	if err := templates.TaskForm(templates.TaskFormData{Task: &task, Projects: projects, Users: users}).Render(r.Context(), w); err != nil {
+	categories, _ := h.db.ListCategories()
+	if err := templates.TaskForm(templates.TaskFormData{Task: &task, Projects: projects, Users: users, Categories: categories}).Render(r.Context(), w); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 }

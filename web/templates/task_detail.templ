@@ -6,6 +6,19 @@ import (
 )
 
 templ TaskDetail(task models.Task) {
+	<div id={ fmt.Sprintf("task-detail-%d", task.ID) }>
+		@taskDetailContent(task)
+	</div>
+}
+
+// TaskDetailOOB is included in toggle responses; HTMX swaps it into #task-detail-{id} if the sidebar is showing that task.
+templ TaskDetailOOB(task models.Task) {
+	<div id={ fmt.Sprintf("task-detail-%d", task.ID) } hx-swap-oob="outerHTML">
+		@taskDetailContent(task)
+	</div>
+}
+
+templ taskDetailContent(task models.Task) {
 	<!-- Panel header -->
 	<div class="flex items-center justify-between px-5 py-4 border-b border-outline-hair">
 		<span class="text-[11px] font-medium text-on-surface-muted uppercase tracking-[0.5px]">Task</span>

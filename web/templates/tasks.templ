@@ -21,54 +21,51 @@ templ AllTasks(layout LayoutData, tasks []models.Task, projects []models.Project
 					+ Add task
 				</button>
 			</div>
-			<form
-			    method="GET"
-			    action="/tasks"
-			    hx-get="/partials/tasks"
-			    hx-target="#task-list"
-			    hx-swap="innerHTML"
-			    hx-trigger="change"
-			    class="flex flex-wrap gap-2 mb-4">
-				<select name="project_id" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
+			<form method="GET" action="/tasks" class="flex flex-wrap gap-2 mb-4">
+				<select name="project_id" @change="$el.form.submit()"
+				        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
 					<option value="">All projects</option>
 					for _, p := range projects {
 						<option value={ fmt.Sprint(p.ID) } selected?={ filters.ProjectID == p.ID }>{ p.Name }</option>
 					}
 				</select>
-				<select name="status" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
+				<select name="status" @change="$el.form.submit()"
+				        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
 					<option value="">All statuses</option>
 					<option value="todo" selected?={ filters.Status == "todo" }>Todo</option>
 					<option value="in progress" selected?={ filters.Status == "in progress" }>In progress</option>
 					<option value="blocked" selected?={ filters.Status == "blocked" }>Blocked</option>
 					<option value="done" selected?={ filters.Status == "done" }>Done</option>
 				</select>
-				<select name="priority" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
+				<select name="priority" @change="$el.form.submit()"
+				        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
 					<option value="">All priorities</option>
 					<option value="critical" selected?={ filters.Priority == "critical" }>Critical</option>
 					<option value="high" selected?={ filters.Priority == "high" }>High</option>
 					<option value="medium" selected?={ filters.Priority == "medium" }>Medium</option>
 					<option value="low" selected?={ filters.Priority == "low" }>Low</option>
 				</select>
-				<select name="assignee_id" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
+				<select name="assignee_id" @change="$el.form.submit()"
+				        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
 					<option value="">Anyone</option>
 					for _, u := range users {
 						<option value={ fmt.Sprint(u.ID) } selected?={ filters.AssigneeID == u.ID }>{ u.Username }</option>
 					}
 				</select>
-				<select name="due" class="text-[13px] border border-outline rounded-sm px-2 py-[6px] bg-surface text-secondary">
+				<select name="due" @change="$el.form.submit()"
+				        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
 					<option value="">Any due date</option>
 					<option value="overdue" selected?={ filters.Due == "overdue" }>Overdue</option>
 					<option value="this_week" selected?={ filters.Due == "this_week" }>This week</option>
 					<option value="this_month" selected?={ filters.Due == "this_month" }>This month</option>
 				</select>
-				<button type="submit" class="text-[13px] border border-outline rounded-sm px-3 py-[6px] bg-surface text-secondary hover:bg-surface-sunken">Filter</button>
-				<a href="/tasks" class="text-[13px] text-secondary hover:text-primary px-2 py-[6px]">Clear</a>
+				<a href="/tasks" class="text-[13px] text-secondary hover:text-primary px-2 py-1">Clear</a>
 			</form>
 			<div id="task-list" class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
 				if len(tasks) == 0 {
 					<p class="text-[13px] text-secondary px-4 py-6">No tasks match your filters.</p>
 				} else {
-					@TaskRows(tasks)
+					@TaskRowsWithProject(tasks)
 				}
 			</div>
 		</div>
@@ -116,7 +113,7 @@ templ myTaskSection(label, bucket string, tasks []models.Task) {
 			<div class="bg-surface border border-outline rounded-lg divide-y divide-outline-hair">
 				for _, t := range tasks {
 					if taskIsInBucket(t, bucket) {
-						@taskRowFull(t)
+						@myTaskRow(t)
 					}
 				}
 			</div>

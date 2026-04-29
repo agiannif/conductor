@@ -16,8 +16,10 @@ func (h *Handler) getProjects(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
+	users, _ := h.db.ListUsers()
+	filters := parseTaskFilters(r)
 	layoutData := h.layoutData(r)
-	if err := templates.Projects(layoutData, projects).Render(r.Context(), w); err != nil {
+	if err := templates.Projects(layoutData, projects, users, filters).Render(r.Context(), w); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 }
@@ -33,14 +35,16 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	tasks, err := h.db.ListTasks(models.TaskFilters{ProjectID: id})
+	filters := parseTaskFilters(r)
+	filters.ProjectID = id
+	tasks, err := h.db.ListTasks(filters)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	users, _ := h.db.ListUsers()
 	layoutData := h.layoutData(r)
-	if err := templates.Project(layoutData, project, tasks, users).Render(r.Context(), w); err != nil {
+	if err := templates.Project(layoutData, project, tasks, users, filters).Render(r.Context(), w); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 }
@@ -130,7 +134,7 @@ func (h *Handler) layoutData(r *http.Request) templates.LayoutData {
 	users, _ := h.db.ListUsers()
 	projectCount, _ := h.db.CountProjects()
 	allTaskCount, _ := h.db.CountTasks(models.TaskFilters{})
-	myTaskCount, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID})
+	myTaskCount, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID, ExcludeDone: true})
 	return templates.LayoutData{
 		User:         user,
 		Users:        users,
