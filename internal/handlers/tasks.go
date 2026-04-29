@@ -132,7 +132,11 @@ func (h *Handler) postUpdateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/projects/%d", task.ProjectID), http.StatusSeeOther)
+	dest := r.Header.Get("Referer")
+	if dest == "" {
+		dest = fmt.Sprintf("/projects/%d", task.ProjectID)
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther)
 }
 
 func (h *Handler) postDeleteTask(w http.ResponseWriter, r *http.Request) {
@@ -191,9 +195,15 @@ func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	// OOB update: if the sidebar is showing this task, refresh it too.
-	// HTMX silently ignores the OOB swap when #task-detail-{id} isn't in the DOM.
+	// OOB: refresh sidebar panel if it's showing this task.
 	_ = templates.TaskDetailOOB(task).Render(r.Context(), w)
+	// OOB: refresh "My tasks" count, except on the My Tasks view where tasks stay
+	// visible after being checked (count would be misleading until navigate-away).
+	if r.URL.Query().Get("ctx") != "my_tasks" {
+		user := currentUser(r)
+		count, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID, ExcludeDone: true})
+		_ = templates.SidebarMyTaskCountOOB(count).Render(r.Context(), w)
+	}
 }
 
 func (h *Handler) getTaskRows(w http.ResponseWriter, r *http.Request) {

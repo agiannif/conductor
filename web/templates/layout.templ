@@ -61,7 +61,7 @@ templ Layout(data LayoutData) {
 							@iconUser()
 							My tasks
 						</span>
-						<span class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.MyTaskCount) }</span>
+						<span id="sidebar-my-task-count" class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(data.MyTaskCount) }</span>
 					</a>
 				</nav>
 				<!-- Household roster -->
@@ -104,6 +104,12 @@ templ Layout(data LayoutData) {
 		</div>
 	</body>
 	</html>
+}
+
+// SidebarMyTaskCountOOB refreshes the "My tasks" sidebar badge without a page reload.
+// HTMX silently ignores it when the sidebar element isn't in the DOM (shouldn't happen, but safe).
+templ SidebarMyTaskCountOOB(count int) {
+	<span id="sidebar-my-task-count" hx-swap-oob="outerHTML" class="text-[11px] text-on-surface-muted tabular-nums">{ fmt.Sprint(count) }</span>
 }
 
 // avatarHues maps user IDs to hues in the oklch(0.78 0.055 hue) band per DESIGN.md.

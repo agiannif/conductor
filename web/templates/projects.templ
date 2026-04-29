@@ -31,7 +31,7 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 				<form method="GET" action="/" class="flex items-center gap-2">
 					<select name="assignee_id" @change="$el.form.submit()"
 					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
-						<option value="">Assignee</option>
+						<option value="">All Assignees</option>
 						for _, u := range users {
 							if filters.AssigneeID == u.ID {
 								<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
@@ -42,7 +42,7 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 					</select>
 					<select name="priority" @change="$el.form.submit()"
 					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
-						<option value="">Priority</option>
+						<option value="">All Priorities</option>
 						@projectsFilterOption("critical", "Critical", filters.Priority)
 						@projectsFilterOption("high", "High", filters.Priority)
 						@projectsFilterOption("medium", "Medium", filters.Priority)
@@ -50,7 +50,7 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 					</select>
 					<select name="due" @change="$el.form.submit()"
 					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
-						<option value="">Due</option>
+						<option value="">All Due Dates</option>
 						@projectsFilterOption("overdue", "Overdue", filters.Due)
 						@projectsFilterOption("this_week", "This week", filters.Due)
 					</select>
