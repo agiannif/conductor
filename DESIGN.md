@@ -183,7 +183,7 @@ components:
 
 ## Overview
 
-Conductor is a quiet, two-person household task manager. The interface should feel like a well-kept paper notebook: lots of warm white, hairline rules, restrained typography, and a single forest-green accent that does the work of every call-to-action and every "this is progressing" signal.
+Conductor is a quiet, small-household task manager. The interface should feel like a well-kept paper notebook: lots of warm white, hairline rules, restrained typography, and a single forest-green accent that does the work of every call-to-action and every "this is progressing" signal.
 
 Visually it sits between **journal** and **utility software** — closer to a writing app than a productivity dashboard. Density is moderate: enough information per row to be glanceable for a household coordinating in real time, but never crowded. Color is used sparingly; structure is carried by hairlines and rhythm, not fills or shadows.
 
@@ -207,7 +207,7 @@ The palette is built around a warm-neutral surface stack, a single accent for ac
 - **Success `#2f5a4d` on `#eaf1ee`.** "Done" pills only. A deeper, less saturated forest than the accent.
 - **Danger `#a13f3f` — Brick.** Overdue dates, destructive button fills, delete actions.
 
-People avatars are generated per-person at `oklch(0.78 0.055 hue)` for the fill and `oklch(0.28 0.04 hue)` for the initial — currently hue 14 (Maren, terracotta) and hue 210 (Jonas, slate). New household members should get hues from the same chroma/lightness band so the set stays cohesive.
+People avatars are generated per-person at `oklch(0.78 0.055 hue)` for the fill and `oklch(0.28 0.04 hue)` for the initial. Hues are assigned by user ID rotating through a fixed pool: 14 (terracotta), 210 (slate), 60 (amber), 150 (sage), 300 (mauve), 330 (rose). New hues added to the pool should stay in the same chroma/lightness band so the set stays cohesive.
 
 ## Typography
 
@@ -234,13 +234,14 @@ The base rhythm is **8px**, with most internal padding landing on multiples of 2
 
 The side panel for task detail is fixed at 360px, anchored to the right edge of the content area, and never covers the sidebar. Modals are centered on a `rgba(28,26,23,0.4)` scrim and capped at 340px wide for confirmations, larger only when the body content demands it.
 
+On mobile (`< sm` breakpoint) the sidebar collapses entirely. A top bar appears — `surface-sunken` background, the wordmark centered, a hamburger icon on the left — which slides the sidebar in as a fixed overlay with an ink scrim behind it. The side panel and modals use `mx-4` gutters to avoid viewport clipping. No layout elements change size; only their visibility and positioning adapt.
+
 ## Elevation & Depth
 
 Elevation is almost entirely conveyed by hairline borders and surface color, not shadows. Two exceptions:
 
 - **Side panel:** `box-shadow: -8px 0 24px rgba(0,0,0,0.04)` — barely perceptible, just enough to lift the panel off the underlying list.
 - **Modal:** `box-shadow: 0 12px 40px rgba(0,0,0,0.18)` — the only "real" shadow in the system. Reserved for the rare, attention-demanding case.
-- **Mobile FAB:** `box-shadow: 0 8px 24px rgba(63,107,93,0.35)` — tinted to the accent.
 
 Cards never get default shadows. Hover states change background fill, not elevation.
 

@@ -118,6 +118,22 @@ docker compose logs -f    # follow logs
 
 NOTE: The default compose file sets `CONDUCTOR_SECURE_COOKIE=false`. Set it to `true` when running behind HTTPS in production.
 
+== Pre-built image (GHCR)
+
+Every push to `main` publishes a Docker image to the GitHub Container Registry automatically via CI. Two tags are produced: `latest` and `sha-<commit>`.
+
+To use the pre-built image instead of building locally, update `docker-compose.yml`:
+
+[source,yaml]
+----
+services:
+  conductor:
+    image: ghcr.io/OWNER/conductor:latest
+    # remove the "build: ." line
+----
+
+Replace `OWNER` with the GitHub username or organisation that owns this repository.
+
 == Configuration
 
 Configuration is via environment variables.
@@ -143,3 +159,5 @@ make build
 ----
 
 This runs `templ generate`, compiles Tailwind CSS, then builds the Docker image tagged `conductor`.
+
+CI builds and pushes the image to GHCR automatically on every push to `main`. See the <<Pre-built image (GHCR)>> section for using the published image.
