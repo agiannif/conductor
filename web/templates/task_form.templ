@@ -26,7 +26,7 @@ templ TaskForm(data TaskFormData) {
 		</span>
 		<button @click="drawerOpen = false" class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
 			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-				<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+				<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
 			</svg>
 		</button>
 	</div>
@@ -50,15 +50,24 @@ templ taskFormFields(data TaskFormData) {
 		<label for="title" class="block text-[13px] font-medium text-primary mb-1">
 			Task name <span class="text-danger">*</span>
 		</label>
-		<input type="text" id="title" name="title" required
-		       value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Title }) }
-		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"/>
+		<input
+			type="text"
+			id="title"
+			name="title"
+			required
+			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Title }) }
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		/>
 	</div>
 	<!-- Description -->
 	<div>
 		<label for="description" class="block text-[13px] font-medium text-primary mb-1">Description <span class="text-on-surface-muted font-normal">(optional)</span></label>
-		<textarea id="description" name="description" rows="3"
-		          class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+		<textarea
+			id="description"
+			name="description"
+			rows="3"
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		>
 			{ taskFieldStr(data.Task, func(t *models.Task) string { return t.Description }) }
 		</textarea>
 	</div>
@@ -66,8 +75,11 @@ templ taskFormFields(data TaskFormData) {
 	<div class="grid grid-cols-2 gap-3">
 		<div>
 			<label for="priority" class="block text-[13px] font-medium text-primary mb-1">Priority</label>
-			<select id="priority" name="priority"
-			        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+			<select
+				id="priority"
+				name="priority"
+				class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+			>
 				@priorityOption(models.PriorityCritical, data.Task)
 				@priorityOption(models.PriorityHigh, data.Task)
 				@priorityOption(models.PriorityMedium, data.Task)
@@ -76,8 +88,11 @@ templ taskFormFields(data TaskFormData) {
 		</div>
 		<div>
 			<label for="status" class="block text-[13px] font-medium text-primary mb-1">Status</label>
-			<select id="status" name="status"
-			        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+			<select
+				id="status"
+				name="status"
+				class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+			>
 				@statusOption(models.StatusTodo, data.Task)
 				@statusOption(models.StatusInProgress, data.Task)
 				@statusOption(models.StatusBlocked, data.Task)
@@ -88,8 +103,11 @@ templ taskFormFields(data TaskFormData) {
 	<!-- Assignee -->
 	<div>
 		<label for="assignee_id" class="block text-[13px] font-medium text-primary mb-1">Assigned to</label>
-		<select id="assignee_id" name="assignee_id"
-		        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+		<select
+			id="assignee_id"
+			name="assignee_id"
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		>
 			<option value="">Unassigned</option>
 			for _, u := range data.Users {
 				if data.Task != nil && data.Task.AssigneeID != nil && *data.Task.AssigneeID == u.ID {
@@ -101,35 +119,48 @@ templ taskFormFields(data TaskFormData) {
 		</select>
 	</div>
 	<!-- Category with autocomplete dropdown and new-value warning -->
-	<div x-data="{ catVal: '', isNew: false, existing: [], showSugg: false, filtered: [] }"
-	     x-init="existing = JSON.parse($el.dataset.cats || '[]'); catVal = $refs.catInput.dataset.initval || ''; filtered = existing; isNew = catVal.length > 0 && !existing.includes(catVal)"
-	     data-cats={ categoriesToJSON(data.Categories) }
-	     class="space-y-2 relative">
+	<div
+		x-data="{ catVal: '', isNew: false, existing: [], showSugg: false, filtered: [] }"
+		x-init="existing = JSON.parse($el.dataset.cats || '[]'); catVal = $refs.catInput.dataset.initval || ''; filtered = existing; isNew = catVal.length > 0 && !existing.includes(catVal)"
+		data-cats={ categoriesToJSON(data.Categories) }
+		class="space-y-2 relative"
+	>
 		<label for="category" class="block text-[13px] font-medium text-primary mb-1">Category</label>
-		<input type="text" id="category" name="category"
-		       x-ref="catInput"
-		       x-model="catVal"
-		       @focus="filtered = catVal ? existing.filter(c => c.toLowerCase().startsWith(catVal.toLowerCase())) : existing; showSugg = filtered.length > 0"
-		       @input="filtered = existing.filter(c => c.toLowerCase().startsWith(catVal.toLowerCase())); showSugg = filtered.length > 0; isNew = catVal.length > 0 && !existing.includes(catVal)"
-		       @keydown.escape="showSugg = false"
-		       @blur="setTimeout(() => showSugg = false, 200)"
-		       data-initval={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
-		       autocomplete="off"
-		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
-		       placeholder="e.g. errands, bookings"/>
+		<input
+			type="text"
+			id="category"
+			name="category"
+			x-ref="catInput"
+			x-model="catVal"
+			@focus="filtered = catVal ? existing.filter(c => c.toLowerCase().startsWith(catVal.toLowerCase())) : existing; showSugg = filtered.length > 0"
+			@input="filtered = existing.filter(c => c.toLowerCase().startsWith(catVal.toLowerCase())); showSugg = filtered.length > 0; isNew = catVal.length > 0 && !existing.includes(catVal)"
+			@keydown.escape="showSugg = false"
+			@blur="setTimeout(() => showSugg = false, 200)"
+			data-initval={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Category }) }
+			autocomplete="off"
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+			placeholder="e.g. errands, bookings"
+		/>
 		<!-- Custom suggestion dropdown (replaces native datalist to avoid browser styling issues) -->
-		<div x-show="showSugg" x-cloak
-		     class="absolute z-10 left-0 right-0 bg-surface border border-outline rounded-sm shadow-sm mt-0.5 max-h-[160px] overflow-y-auto">
+		<div
+			x-show="showSugg"
+			x-cloak
+			class="absolute z-10 left-0 right-0 bg-surface border border-outline rounded-sm shadow-sm mt-0.5 max-h-[160px] overflow-y-auto"
+		>
 			<template x-for="cat in filtered" :key="cat">
-				<button type="button"
-				        @mousedown.prevent="catVal = cat; showSugg = false; isNew = false"
-				        class="block w-full text-left px-[10px] py-[7px] text-[13px] text-primary hover:bg-surface-sunken truncate"
-				        x-text="cat">
-				</button>
+				<button
+					type="button"
+					@mousedown.prevent="catVal = cat; showSugg = false; isNew = false"
+					class="block w-full text-left px-[10px] py-[7px] text-[13px] text-primary hover:bg-surface-sunken truncate"
+					x-text="cat"
+				></button>
 			</template>
 		</div>
-		<div x-show="isNew" x-cloak
-		     class="flex items-start gap-2 bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px]">
+		<div
+			x-show="isNew"
+			x-cloak
+			class="flex items-start gap-2 bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px]"
+		>
 			<span class="text-[13px] text-warning flex-1">
 				"<span x-text="catVal"></span>" is a new category — confirm?
 			</span>
@@ -146,8 +177,12 @@ templ taskFormFields(data TaskFormData) {
 			}
 		</label>
 		if data.Task != nil {
-			<select id="project_id" name="project_id" disabled
-			        class="w-full border border-outline-hair rounded-sm px-[10px] py-[7px] text-[13px] bg-surface-sunken text-secondary">
+			<select
+				id="project_id"
+				name="project_id"
+				disabled
+				class="w-full border border-outline-hair rounded-sm px-[10px] py-[7px] text-[13px] bg-surface-sunken text-secondary"
+			>
 				for _, p := range data.Projects {
 					if p.ID == data.Task.ProjectID {
 						<option value={ fmt.Sprint(p.ID) } selected>{ p.Name }</option>
@@ -157,8 +192,12 @@ templ taskFormFields(data TaskFormData) {
 				}
 			</select>
 		} else {
-			<select id="project_id" name="project_id" required
-			        class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">
+			<select
+				id="project_id"
+				name="project_id"
+				required
+				class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+			>
 				<option value="">— select project —</option>
 				for _, p := range data.Projects {
 					if data.PreselectedProjectID != 0 && p.ID == data.PreselectedProjectID {
@@ -173,26 +212,39 @@ templ taskFormFields(data TaskFormData) {
 	<!-- Link -->
 	<div>
 		<label for="link" class="block text-[13px] font-medium text-primary mb-1">Link <span class="text-on-surface-muted font-normal">(optional)</span></label>
-		<input type="text" id="link" name="link"
-		       value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Link }) }
-		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
-		       placeholder="https://…"/>
+		<input
+			type="text"
+			id="link"
+			name="link"
+			value={ taskFieldStr(data.Task, func(t *models.Task) string { return t.Link }) }
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+			placeholder="https://…"
+		/>
 	</div>
 	<!-- Due date -->
 	<div>
 		<label for="due_date" class="block text-[13px] font-medium text-primary mb-1">Due <span class="text-on-surface-muted font-normal">(optional)</span></label>
-		<input type="date" id="due_date" name="due_date"
-		       value={ taskDueDateStr(data.Task) }
-		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"/>
+		<input
+			type="date"
+			id="due_date"
+			name="due_date"
+			value={ taskDueDateStr(data.Task) }
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		/>
 	</div>
 	<!-- Footer buttons -->
 	<div class="flex justify-end gap-2 pt-2">
-		<button type="button" @click="drawerOpen = false"
-		        class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken">
+		<button
+			type="button"
+			@click="drawerOpen = false"
+			class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
+		>
 			Cancel
 		</button>
-		<button type="submit"
-		        class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium">
+		<button
+			type="submit"
+			class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium"
+		>
 			if data.Task != nil {
 				Save changes
 			} else {

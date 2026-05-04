@@ -11,27 +11,34 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 			<div class="flex items-center justify-between mb-5">
 				<h1 class="text-[28px] font-normal tracking-[-0.4px] text-primary">All projects</h1>
 				<button
-				    hx-get="/partials/projects/new"
-				    hx-target="#drawer-inner"
-				    hx-swap="innerHTML"
-				    @click="drawerOpen = true"
-				    class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1">
+					hx-get="/partials/projects/new"
+					hx-target="#drawer-inner"
+					hx-swap="innerHTML"
+					@click="drawerOpen = true"
+					class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1"
+				>
 					+ Create project
 				</button>
 			</div>
 			<!-- Toolbar: expand all + filter -->
-			<div x-data="{ allExpanded: false }"
-			     class="hidden sm:flex items-center gap-3 mb-4 flex-wrap">
+			<div
+				x-data="{ allExpanded: false }"
+				class="hidden sm:flex items-center gap-3 mb-4 flex-wrap"
+			>
 				<button
-				    @click="allExpanded = !allExpanded; $dispatch('projects-toggle-all', { open: allExpanded })"
-				    class="text-[13px] text-secondary hover:text-primary"
-				    x-text="allExpanded ? 'Collapse all' : 'Expand all'">
+					@click="allExpanded = !allExpanded; $dispatch('projects-toggle-all', { open: allExpanded })"
+					class="text-[13px] text-secondary hover:text-primary"
+					x-text="allExpanded ? 'Collapse all' : 'Expand all'"
+				>
 					Expand all
 				</button>
 				<span class="text-on-surface-muted text-[13px]">·</span>
 				<form method="GET" action="/" class="flex items-center gap-2">
-					<select name="assignee_id" @change="$el.form.submit()"
-					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+					<select
+						name="assignee_id"
+						@change="$el.form.submit()"
+						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+					>
 						<option value="">All Assignees</option>
 						for _, u := range users {
 							if filters.AssigneeID == u.ID {
@@ -41,16 +48,22 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 							}
 						}
 					</select>
-					<select name="priority" @change="$el.form.submit()"
-					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+					<select
+						name="priority"
+						@change="$el.form.submit()"
+						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+					>
 						<option value="">All Priorities</option>
 						@projectsFilterOption("critical", "Critical", filters.Priority)
 						@projectsFilterOption("high", "High", filters.Priority)
 						@projectsFilterOption("medium", "Medium", filters.Priority)
 						@projectsFilterOption("low", "Low", filters.Priority)
 					</select>
-					<select name="due" @change="$el.form.submit()"
-					        class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary">
+					<select
+						name="due"
+						@change="$el.form.submit()"
+						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+					>
 						<option value="">All Due Dates</option>
 						@projectsFilterOption("overdue", "Overdue", filters.Due)
 						@projectsFilterOption("this_week", "This week", filters.Due)
@@ -73,19 +86,30 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 }
 
 templ projectCard(p models.Project, filters models.TaskFilters) {
-	<div class="bg-surface border border-outline rounded" x-data="{ open: false }"
-	     @projects-toggle-all.window="open = $event.detail.open">
-		<button class="w-full flex items-center gap-3 px-4 py-3 text-left bg-surface-sunken hover:bg-outline-hair rounded-t"
-		        @click="open = !open">
-			<svg class="w-4 h-4 text-on-surface-muted flex-shrink-0 transition-transform duration-150"
-			     :class="{ 'rotate-90': open }"
-			     viewBox="0 0 24 24" fill="none" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 5l7 7-7 7"/>
+	<div
+		class="bg-surface border border-outline rounded"
+		x-data="{ open: false }"
+		@projects-toggle-all.window="open = $event.detail.open"
+	>
+		<button
+			class="w-full flex items-center gap-3 px-4 py-3 text-left bg-surface-sunken hover:bg-outline-hair rounded-t"
+			@click="open = !open"
+		>
+			<svg
+				class="w-4 h-4 text-on-surface-muted flex-shrink-0 transition-transform duration-150"
+				:class="{ 'rotate-90': open }"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 5l7 7-7 7"></path>
 			</svg>
 			<div class="flex-1 min-w-0 text-left">
-				<a href={ templ.SafeURL(fmt.Sprintf("/projects/%d", p.ID)) }
-				   class="text-[15px] font-medium text-primary hover:underline"
-				   @click.stop>
+				<a
+					href={ templ.SafeURL(fmt.Sprintf("/projects/%d", p.ID)) }
+					class="text-[15px] font-medium text-primary hover:underline"
+					@click.stop
+				>
 					{ p.Name }
 				</a>
 				<!-- Mobile stats row below project name -->
@@ -110,25 +134,27 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 		</button>
 		<div x-show="open" x-cloak>
 			<div
-			    hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d%s", p.ID, projectsFiltersQuery(filters)) }
-			    hx-trigger="intersect once"
-			    class="divide-y divide-outline-hair border-t border-outline-hair min-h-[1px]">
-			</div>
+				hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d%s", p.ID, projectsFiltersQuery(filters)) }
+				hx-trigger="intersect once"
+				class="divide-y divide-outline-hair border-t border-outline-hair min-h-[1px]"
+			></div>
 			<div class="px-4 py-2 border-t border-outline-hair flex items-center gap-4">
 				<button
-				    hx-get={ fmt.Sprintf("/partials/tasks/new?project_id=%d", p.ID) }
-				    hx-target="#drawer-inner"
-				    hx-swap="innerHTML"
-				    @click="drawerOpen = true"
-				    class="text-[13px] font-medium text-tertiary hover:text-tertiary-hover">
+					hx-get={ fmt.Sprintf("/partials/tasks/new?project_id=%d", p.ID) }
+					hx-target="#drawer-inner"
+					hx-swap="innerHTML"
+					@click="drawerOpen = true"
+					class="text-[13px] font-medium text-tertiary hover:text-tertiary-hover"
+				>
 					+ Add task
 				</button>
 				<button
-				    hx-get={ fmt.Sprintf("/partials/projects/%d/edit", p.ID) }
-				    hx-target="#drawer-inner"
-				    hx-swap="innerHTML"
-				    @click="drawerOpen = true"
-				    class="text-[13px] font-medium text-tertiary hover:text-tertiary-hover">
+					hx-get={ fmt.Sprintf("/partials/projects/%d/edit", p.ID) }
+					hx-target="#drawer-inner"
+					hx-swap="innerHTML"
+					@click="drawerOpen = true"
+					class="text-[13px] font-medium text-tertiary hover:text-tertiary-hover"
+				>
 					Edit
 				</button>
 			</div>
@@ -143,7 +169,6 @@ templ projectsFilterOption(value, label, current string) {
 		<option value={ value }>{ label }</option>
 	}
 }
-
 
 func projectsFiltersQuery(f models.TaskFilters) string {
 	s := ""

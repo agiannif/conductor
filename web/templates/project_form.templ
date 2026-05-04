@@ -21,7 +21,7 @@ templ ProjectForm(data ProjectFormData) {
 		</span>
 		<button @click="drawerOpen = false" class="p-1 text-secondary hover:text-primary rounded-sm hover:bg-surface-sunken">
 			<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-				<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+				<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
 			</svg>
 		</button>
 	</div>
@@ -52,21 +52,36 @@ templ ProjectDeleteError(taskCount int) {
 templ projectFormFields(name, description string, isEdit bool) {
 	<div>
 		<label for="name" class="block text-[13px] font-medium text-primary mb-1">Name <span class="text-danger">*</span></label>
-		<input type="text" id="name" name="name" value={ name } required
-		       class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"/>
+		<input
+			type="text"
+			id="name"
+			name="name"
+			value={ name }
+			required
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		/>
 	</div>
 	<div>
 		<label for="description" class="block text-[13px] font-medium text-primary mb-1">Description <span class="text-on-surface-muted font-normal">(optional)</span></label>
-		<textarea id="description" name="description" rows="3"
-		          class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary">{ description }</textarea>
+		<textarea
+			id="description"
+			name="description"
+			rows="3"
+			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
+		>{ description }</textarea>
 	</div>
 	<div class="flex justify-end gap-2 pt-2">
-		<button type="button" @click="drawerOpen = false"
-		        class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken">
+		<button
+			type="button"
+			@click="drawerOpen = false"
+			class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
+		>
 			Cancel
 		</button>
-		<button type="submit"
-		        class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium">
+		<button
+			type="submit"
+			class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium"
+		>
 			if isEdit {
 				Save changes
 			} else {
