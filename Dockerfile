@@ -10,7 +10,6 @@ FROM gcr.io/distroless/static:nonroot
 COPY --from=builder --chown=nonroot:nonroot /conductor /conductor
 COPY --from=builder --chown=65532:65532 /data /data
 VOLUME /data
-EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD ["/conductor", "healthz"]
 USER nonroot:nonroot
