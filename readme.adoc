@@ -98,45 +98,78 @@ password reset for user "alice"
 
 [source,shell]
 ----
-docker compose exec conductor /conductor admin list-users
-docker compose exec conductor /conductor admin add-user alice password
-docker compose exec conductor /conductor admin delete-user alice
-docker compose exec conductor /conductor admin reset-password alice newpassword
+docker compose -f deployments/docker/docker-compose.yml exec conductor /conductor admin list-users
+docker compose -f deployments/docker/docker-compose.yml exec conductor /conductor admin add-user alice password
+docker compose -f deployments/docker/docker-compose.yml exec conductor /conductor admin delete-user alice
+docker compose -f deployments/docker/docker-compose.yml exec conductor /conductor admin reset-password alice newpassword
 ----
 
-== Running with Docker Compose
+== Deployment
+
+Compose and native deployment files live under `deployments/`.
+
+=== Docker Compose
 
 [source,shell]
 ----
-docker compose up -d
+docker compose -f deployments/docker/docker-compose.yml up -d
 ----
 
 The app listens on port 8080. The SQLite database is stored in the `conductor_data` Docker volume.
 
 [source,shell]
 ----
-docker compose down       # stop
-docker compose logs -f    # follow logs
-docker compose restart    # restart the container
+docker compose -f deployments/docker/docker-compose.yml down       # stop
+docker compose -f deployments/docker/docker-compose.yml logs -f    # follow logs
+docker compose -f deployments/docker/docker-compose.yml restart    # restart
 ----
 
 NOTE: The default compose file sets `CONDUCTOR_SECURE_COOKIE=false`. Set it to `true` when running behind HTTPS in production.
 
-== Pre-built image (GHCR)
+=== Pre-built image (GHCR)
 
-Every push to `main` publishes a Docker image to the GitHub Container Registry automatically via CI. Two tags are produced: `latest` and `sha-<commit>`.
+Each release tag publishes a multi-arch Docker image (`linux/amd64`, `linux/arm64`) to the GitHub Container Registry. Tags produced: `latest`, `vX.Y.Z`, and `vX.Y`.
 
-To use the pre-built image instead of building locally, update `docker-compose.yml`:
+To use the pre-built image instead of building locally, update `deployments/docker/docker-compose.yml`:
 
 [source,yaml]
 ----
 services:
   conductor:
-    image: ghcr.io/OWNER/conductor:latest
+    image: ghcr.io/agiannif/conductor:latest
     # remove the "build: ." line
 ----
 
-Replace `OWNER` with the GitHub username or organisation that owns this repository.
+=== Native (Linux, no Docker)
+
+Suitable for a Raspberry Pi or any Linux host. Installs a static binary and a systemd service.
+
+[source,shell]
+----
+# Install (latest release)
+curl -fsSL https://raw.githubusercontent.com/agiannif/conductor/main/deployments/native/install.sh | sudo bash
+
+# Install (pinned version)
+VERSION=v1.0.0 curl -fsSL https://raw.githubusercontent.com/agiannif/conductor/main/deployments/native/install.sh | sudo bash
+----
+
+The installer detects your CPU architecture automatically (`amd64`, `arm64`, `armhf`) and downloads the matching binary from GitHub Releases.
+
+After install:
+
+[source,shell]
+----
+systemctl status conductor        # check service status
+journalctl -u conductor -f        # follow logs
+conductor admin add-user <u> <p>  # create first user
+----
+
+To uninstall:
+
+[source,shell]
+----
+sudo deployments/native/uninstall.sh
+----
 
 == Configuration
 
@@ -175,4 +208,4 @@ make image
 
 Generates templates and CSS, then builds a Docker image tagged `conductor`.
 
-CI builds and pushes the image to GHCR automatically on every push to `main`. See the <<Pre-built image (GHCR)>> section for using the published image.
+CI builds and pushes the image to GHCR automatically on each release tag. See the <<Pre-built image (GHCR)>> section for using the published image.

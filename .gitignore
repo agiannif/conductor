@@ -23,6 +23,7 @@ conductor.db-wal
 
 # Binaries
 /conductor
+/dist
 *.exe
 *.exe~
 *.dll
