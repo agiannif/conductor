@@ -4,7 +4,7 @@
 
 = conductor
 
-A self-hosted task tracking app for small teams. Projects, tasks, assignees, due dates, priorities — no accounts, no cloud, no nonsense.
+A self-hosted task tracking app for small teams.
 
 Built with Go, templ, HTMX, AlpineJS, SQLite, and Tailwind CSS. Ships as a single Docker container.
 
@@ -37,15 +37,16 @@ Other useful targets:
 [source,shell]
 ----
 make help       # show all available commands
-make test       # run all tests
-make generate   # re-run templ code generation
-make css        # recompile Tailwind CSS
+make lint       # format and vet all source files
+make test       # run lint then all tests
+make generate   # re-run templ code generation and recompile Tailwind CSS
+make seed       # seed local database with test users, projects, and tasks
 make clean      # remove generated files and local database
 ----
 
 == Admin CLI
 
-The `conductor admin` subcommand manages users directly against the database. Run it on the same machine as the database, or inside the container via `docker exec`.
+The `conductor admin` subcommand manages users directly against the database. Run it on the same machine as the database, or inside the container via `docker compose exec`.
 
 === List users
 
@@ -63,7 +64,7 @@ conductor admin add-user <username> <password>
 
 [source,shell]
 ----
-$ conductor admin add-user alice hunter2
+$ conductor admin add-user alice password
 created user "alice" (id=1)
 ----
 
@@ -97,8 +98,10 @@ password reset for user "alice"
 
 [source,shell]
 ----
-docker exec -it conductor_conductor_1 /conductor admin list-users
-docker exec -it conductor_conductor_1 /conductor admin add-user alice hunter2
+docker compose exec conductor /conductor admin list-users
+docker compose exec conductor /conductor admin add-user alice password
+docker compose exec conductor /conductor admin delete-user alice
+docker compose exec conductor /conductor admin reset-password alice newpassword
 ----
 
 == Running with Docker Compose
@@ -114,6 +117,7 @@ The app listens on port 8080. The SQLite database is stored in the `conductor_da
 ----
 docker compose down       # stop
 docker compose logs -f    # follow logs
+docker compose restart    # restart the container
 ----
 
 NOTE: The default compose file sets `CONDUCTOR_SECURE_COOKIE=false`. Set it to `true` when running behind HTTPS in production.
@@ -151,13 +155,24 @@ Configuration is via environment variables.
 | Set the `Secure` flag on session cookies. Set to `false` for local HTTP development.
 |===
 
-== Building the Docker image
+== Building
+
+=== Local binary
 
 [source,shell]
 ----
 make build
 ----
 
-This runs `templ generate`, compiles Tailwind CSS, then builds the Docker image tagged `conductor`.
+Generates templates and CSS, then compiles the `conductor` binary in the project root.
+
+=== Docker image
+
+[source,shell]
+----
+make image
+----
+
+Generates templates and CSS, then builds a Docker image tagged `conductor`.
 
 CI builds and pushes the image to GHCR automatically on every push to `main`. See the <<Pre-built image (GHCR)>> section for using the published image.

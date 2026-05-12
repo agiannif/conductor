@@ -2,6 +2,9 @@
 CLAUDE.local.md
 .claude/settings.local.json
 
+# Design and planning docs
+docs/
+
 # IDE
 .vscode/
 .idea/
