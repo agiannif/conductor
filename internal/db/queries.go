@@ -228,6 +228,17 @@ func (d *DB) ProjectTaskCount(id int64) (int, error) {
 	return count, err
 }
 
+func (d *DB) ProjectNonDoneTaskCount(id int64) (int, error) {
+	var count int
+	err := d.sql.QueryRow(`SELECT COUNT(*) FROM tasks WHERE project_id = ? AND status != 'done'`, id).Scan(&count)
+	return count, err
+}
+
+func (d *DB) DeleteProjectTasks(id int64) error {
+	_, err := d.sql.Exec(`DELETE FROM tasks WHERE project_id = ?`, id)
+	return err
+}
+
 func (d *DB) CountProjects() (int, error) {
 	var count int
 	err := d.sql.QueryRow(`SELECT COUNT(*) FROM projects`).Scan(&count)

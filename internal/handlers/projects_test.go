@@ -109,6 +109,34 @@ func TestDeleteProjectHTMX(t *testing.T) {
 	}
 }
 
+func TestDeleteProjectWithDoneTasksHTMX(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("p", "")
+	database.CreateTask(db.CreateTaskParams{
+		Title: "t", Status: models.StatusDone,
+		Priority: models.PriorityLow, ProjectID: projectID, CreatedBy: userID,
+	})
+
+	req := httptest.NewRequest("POST", fmt.Sprintf("/projects/%d/delete", projectID), nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	req.Header.Set("HX-Request", "true")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("want 200, got %d", w.Code)
+	}
+	if got := w.Header().Get("HX-Redirect"); got != "/" {
+		t.Errorf("want HX-Redirect: /, got %q", got)
+	}
+	projects, _ := database.ListProjects()
+	if len(projects) != 0 {
+		t.Error("want project deleted")
+	}
+}
+
 func TestDeleteProjectBlockedHTMX(t *testing.T) {
 	h, database := newTestHandler(t)
 	userID, _ := database.CreateUser("alice", "pw")

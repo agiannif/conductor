@@ -89,7 +89,7 @@ func (h *Handler) postDeleteProject(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	count, err := h.db.ProjectTaskCount(id)
+	count, err := h.db.ProjectNonDoneTaskCount(id)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -101,6 +101,10 @@ func (h *Handler) postDeleteProject(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusConflict)
 		_ = templates.ProjectDeleteError(count).Render(r.Context(), w)
+		return
+	}
+	if err := h.db.DeleteProjectTasks(id); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	if err := h.db.DeleteProject(id); err != nil {
