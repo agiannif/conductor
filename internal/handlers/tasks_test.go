@@ -208,3 +208,34 @@ func TestGetTaskDeleteConfirm(t *testing.T) {
 		t.Errorf("response missing expected heading; body: %s", w.Body.String())
 	}
 }
+
+func TestToggleTaskOnProjectPage(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("p", "")
+	taskID, _ := database.CreateTask(db.CreateTaskParams{
+		Title: "t", Status: models.StatusTodo,
+		Priority: models.PriorityLow, ProjectID: projectID, CreatedBy: userID,
+	})
+
+	req := httptest.NewRequest("POST", fmt.Sprintf("/tasks/%d/toggle", taskID), nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	req.Header.Set("HX-Current-URL", fmt.Sprintf("http://localhost:8080/projects/%d", projectID))
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("want 200, got %d", w.Code)
+	}
+	if got := w.Header().Get("HX-Reswap"); got != "none" {
+		t.Errorf("want HX-Reswap: none, got %q", got)
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, "project-stats") {
+		t.Errorf("want project-stats OOB in body, got %q", body)
+	}
+	if !strings.Contains(body, "project-task-groups") {
+		t.Errorf("want project-task-groups OOB in body, got %q", body)
+	}
+}

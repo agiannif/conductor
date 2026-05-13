@@ -182,6 +182,20 @@ func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
+	// On the project detail page, replace the stats and task groups wholesale
+	// so the progress bar and section positions update atomically.
+	if projectID := projectPageID(r); projectID != 0 {
+		project, _ := h.db.GetProject(projectID)
+		tasks, _ := h.db.ListTasks(models.TaskFilters{ProjectID: projectID})
+		w.Header().Set("HX-Reswap", "none")
+		_ = templates.TaskDetailOOB(task).Render(r.Context(), w)
+		_ = templates.ProjectStatsOOB(project).Render(r.Context(), w)
+		_ = templates.ProjectTaskGroupsOOB(tasks).Render(r.Context(), w)
+		user := currentUser(r)
+		count, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID, ExcludeDone: true})
+		_ = templates.SidebarMyTaskCountOOB(count).Render(r.Context(), w)
+		return
+	}
 	var row templ.Component
 	switch r.URL.Query().Get("ctx") {
 	case "all_tasks":
@@ -204,6 +218,28 @@ func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
 		count, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID, ExcludeDone: true})
 		_ = templates.SidebarMyTaskCountOOB(count).Render(r.Context(), w)
 	}
+}
+
+// projectPageID returns the project ID if the request originated from a project
+// detail page (/projects/{id}), or 0 otherwise.
+func projectPageID(r *http.Request) int64 {
+	currentURL := r.Header.Get("HX-Current-URL")
+	idx := strings.Index(currentURL, "/projects/")
+	if idx == -1 {
+		return 0
+	}
+	rest := currentURL[idx+len("/projects/"):]
+	if q := strings.IndexAny(rest, "?#"); q != -1 {
+		rest = rest[:q]
+	}
+	if strings.ContainsRune(rest, '/') {
+		return 0
+	}
+	id, err := strconv.ParseInt(rest, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return id
 }
 
 func (h *Handler) getTaskRows(w http.ResponseWriter, r *http.Request) {

@@ -62,12 +62,14 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 			</div>
 			<!-- Progress bar + summary + filter dropdowns -->
 			<div class="flex items-center gap-3 mb-7 px-4 py-3 bg-surface border border-outline rounded">
-				<div class="w-28 bg-outline rounded-full h-[3px] flex-shrink-0">
-					<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", project.ProgressPct()) }></div>
+				<div id="project-stats" class="flex items-center gap-3">
+					<div class="w-28 bg-outline rounded-full h-[3px] flex-shrink-0">
+						<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", project.ProgressPct()) }></div>
+					</div>
+					<span class="text-[13px] text-secondary tabular-nums">{ fmt.Sprint(project.ProgressPct()) }%</span>
+					<span class="text-on-surface-muted">·</span>
+					<span class="text-[13px] text-secondary">{ fmt.Sprint(project.DoneTasks) } done · { fmt.Sprint(project.OpenTasks()) } open</span>
 				</div>
-				<span class="text-[13px] text-secondary tabular-nums">{ fmt.Sprint(project.ProgressPct()) }%</span>
-				<span class="text-on-surface-muted">·</span>
-				<span class="text-[13px] text-secondary">{ fmt.Sprint(project.DoneTasks) } done · { fmt.Sprint(project.OpenTasks()) } open</span>
 				<form
 					method="GET"
 					action={ templ.SafeURL(fmt.Sprintf("/projects/%d", project.ID)) }
@@ -110,10 +112,12 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 				</form>
 			</div>
 			<!-- Status groups (empty groups are hidden) -->
-			@projectStatusGroup("To do", models.StatusTodo, tasks)
-			@projectStatusGroup("In progress", models.StatusInProgress, tasks)
-			@projectStatusGroup("Blocked", models.StatusBlocked, tasks)
-			@projectStatusGroup("Done", models.StatusDone, tasks)
+			<div id="project-task-groups">
+				@projectStatusGroup("To do", models.StatusTodo, tasks)
+				@projectStatusGroup("In progress", models.StatusInProgress, tasks)
+				@projectStatusGroup("Blocked", models.StatusBlocked, tasks)
+				@projectStatusGroup("Done", models.StatusDone, tasks)
+			</div>
 		</div>
 	}
 }
@@ -152,4 +156,26 @@ func countByStatus(tasks []models.Task, status models.Status) int {
 		}
 	}
 	return n
+}
+
+// ProjectStatsOOB swaps the progress bar stats in-place on a project page.
+templ ProjectStatsOOB(project models.Project) {
+	<div id="project-stats" hx-swap-oob="outerHTML" class="flex items-center gap-3">
+		<div class="w-28 bg-outline rounded-full h-[3px] flex-shrink-0">
+			<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", project.ProgressPct()) }></div>
+		</div>
+		<span class="text-[13px] text-secondary tabular-nums">{ fmt.Sprint(project.ProgressPct()) }%</span>
+		<span class="text-on-surface-muted">·</span>
+		<span class="text-[13px] text-secondary">{ fmt.Sprint(project.DoneTasks) } done · { fmt.Sprint(project.OpenTasks()) } open</span>
+	</div>
+}
+
+// ProjectTaskGroupsOOB swaps all status group sections in-place on a project page.
+templ ProjectTaskGroupsOOB(tasks []models.Task) {
+	<div id="project-task-groups" hx-swap-oob="outerHTML">
+		@projectStatusGroup("To do", models.StatusTodo, tasks)
+		@projectStatusGroup("In progress", models.StatusInProgress, tasks)
+		@projectStatusGroup("Blocked", models.StatusBlocked, tasks)
+		@projectStatusGroup("Done", models.StatusDone, tasks)
+	</div>
 }
