@@ -3,6 +3,7 @@ set -euo pipefail
 
 INSTALL_PATH="/usr/local/bin/conductor"
 DATA_DIR="/var/lib/conductor"
+DEFAULTS_FILE="/etc/default/conductor"
 SERVICE_FILE="/etc/systemd/system/conductor.service"
 SERVICE_USER="conductor"
 
@@ -38,18 +39,18 @@ if [ -f "$INSTALL_PATH" ]; then
     echo "Removed $INSTALL_PATH"
 fi
 
+# ---- defaults file ----------------------------------------------------------
+
+if [ -f "$DEFAULTS_FILE" ]; then
+    rm "$DEFAULTS_FILE"
+    echo "Removed $DEFAULTS_FILE"
+fi
+
 # ---- data directory ---------------------------------------------------------
 
 if [ -d "$DATA_DIR" ]; then
-    echo ""
-    echo "WARNING: $DATA_DIR contains your database and all task data."
-    read -r -p "Delete it? This cannot be undone. [y/N] " confirm
-    if [[ "${confirm:-}" =~ ^[Yy]$ ]]; then
-        rm -rf "$DATA_DIR"
-        echo "Removed $DATA_DIR"
-    else
-        echo "Kept $DATA_DIR — remove it manually when ready."
-    fi
+    rm -rf "$DATA_DIR"
+    echo "Removed $DATA_DIR"
 fi
 
 # ---- system user ------------------------------------------------------------

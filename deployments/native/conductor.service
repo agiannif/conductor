@@ -10,8 +10,7 @@ ExecStart=/usr/local/bin/conductor
 Restart=on-failure
 RestartSec=5
 
-Environment=CONDUCTOR_DB_PATH=/var/lib/conductor/conductor.db
-Environment=CONDUCTOR_SECURE_COOKIE=false
+EnvironmentFile=/etc/default/conductor
 
 NoNewPrivileges=true
 ProtectSystem=strict

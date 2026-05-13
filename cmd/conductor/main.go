@@ -37,9 +37,16 @@ func main() {
 }
 
 func runCLI(args []string) {
-	if len(args) == 0 {
+	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
 		fmt.Fprintln(os.Stderr, "usage: conductor <command>")
-		os.Exit(1)
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "commands:")
+		fmt.Fprintln(os.Stderr, "  healthz   check if the server is healthy")
+		fmt.Fprintln(os.Stderr, "  admin     manage users")
+		if len(args) == 0 {
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
 	switch args[0] {
 	case "healthz":
@@ -58,10 +65,29 @@ func runCLI(args []string) {
 }
 
 func runAdmin(args []string) {
-	if len(args) == 0 {
+	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
 		fmt.Fprintln(os.Stderr, "usage: conductor admin <command>")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "commands:")
+		fmt.Fprintln(os.Stderr, "  list-users")
+		fmt.Fprintln(os.Stderr, "  add-user <username> <password>")
+		fmt.Fprintln(os.Stderr, "  delete-user <username>")
+		fmt.Fprintln(os.Stderr, "  reset-password <username> <new-password>")
+		if len(args) == 0 {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+
+	// Validate command before opening the DB so unknown commands and flags
+	// produce a clear error even if the DB path is misconfigured.
+	switch args[0] {
+	case "list-users", "add-user", "delete-user", "reset-password":
+	default:
+		fmt.Fprintf(os.Stderr, "unknown admin command: %s\n", args[0])
 		os.Exit(1)
 	}
+
 	cfg := config.Load()
 	database, err := db.Open(cfg.DBPath)
 	if err != nil {
@@ -84,9 +110,6 @@ func runAdmin(args []string) {
 		adminDeleteUser(database, args[1:])
 	case "reset-password":
 		adminResetPassword(database, args[1:])
-	default:
-		fmt.Fprintf(os.Stderr, "unknown admin command: %s\n", args[0])
-		os.Exit(1)
 	}
 }
 
@@ -99,6 +122,10 @@ func hashPassword(password string) string {
 }
 
 func adminAddUser(database *db.DB, args []string) {
+	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+		fmt.Fprintln(os.Stderr, "usage: conductor admin add-user <username> <password>")
+		os.Exit(0)
+	}
 	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: conductor admin add-user <username> <password>")
 		os.Exit(1)
@@ -112,6 +139,10 @@ func adminAddUser(database *db.DB, args []string) {
 }
 
 func adminDeleteUser(database *db.DB, args []string) {
+	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+		fmt.Fprintln(os.Stderr, "usage: conductor admin delete-user <username>")
+		os.Exit(0)
+	}
 	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "usage: conductor admin delete-user <username>")
 		os.Exit(1)
@@ -131,6 +162,10 @@ func adminDeleteUser(database *db.DB, args []string) {
 }
 
 func adminResetPassword(database *db.DB, args []string) {
+	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+		fmt.Fprintln(os.Stderr, "usage: conductor admin reset-password <username> <new-password>")
+		os.Exit(0)
+	}
 	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: conductor admin reset-password <username> <new-password>")
 		os.Exit(1)

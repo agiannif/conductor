@@ -67,6 +67,16 @@ fi
 mkdir -p "$DATA_DIR"
 chown "$SERVICE_USER:$SERVICE_USER" "$DATA_DIR"
 
+# ---- defaults file ----------------------------------------------------------
+# Written to /etc/default/conductor so that the binary reads the correct DB
+# path when run directly (e.g. `sudo conductor admin add-user ...`), not only
+# when started by systemd.
+
+cat > /etc/default/conductor << 'EOF'
+CONDUCTOR_DB_PATH=/var/lib/conductor/conductor.db
+CONDUCTOR_SECURE_COOKIE=false
+EOF
+
 # ---- systemd unit -----------------------------------------------------------
 
 cat > "$SERVICE_FILE" << 'EOF'
@@ -82,8 +92,7 @@ ExecStart=/usr/local/bin/conductor
 Restart=on-failure
 RestartSec=5
 
-Environment=CONDUCTOR_DB_PATH=/var/lib/conductor/conductor.db
-Environment=CONDUCTOR_SECURE_COOKIE=false
+EnvironmentFile=/etc/default/conductor
 
 NoNewPrivileges=true
 ProtectSystem=strict
