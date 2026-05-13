@@ -66,12 +66,12 @@ else
     echo "  2) http://hostname        — port 80, no port needed in the URL"
     echo "  3) https://yourdomain.com — HTTPS via Caddy (requires a public domain)"
     echo ""
-    read -r -p "Choice [1]: " MODE
+    read -r -p "Choice [1]: " MODE </dev/tty
     MODE="${MODE:-1}"
 
     if [ "$MODE" = "3" ]; then
         echo ""
-        read -r -p "Domain name (e.g. tasks.example.com): " DOMAIN
+        read -r -p "Domain name (e.g. tasks.example.com): " DOMAIN </dev/tty
         if [ -z "$DOMAIN" ]; then
             echo "error: domain name is required for HTTPS mode" >&2
             exit 1
