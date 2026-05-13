@@ -65,3 +65,74 @@ func TestDeleteProjectBlocked(t *testing.T) {
 		t.Error("project should still exist when delete is blocked")
 	}
 }
+
+func TestGetProjectDeleteConfirm(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("Garden", "")
+
+	req := httptest.NewRequest("GET", fmt.Sprintf("/partials/projects/%d/delete-confirm", projectID), nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("want 200, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "Garden") {
+		t.Errorf("want project name in body, got %q", w.Body.String())
+	}
+}
+
+func TestDeleteProjectHTMX(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("Garden", "")
+
+	req := httptest.NewRequest("POST", fmt.Sprintf("/projects/%d/delete", projectID), nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	req.Header.Set("HX-Request", "true")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("want 200, got %d", w.Code)
+	}
+	if got := w.Header().Get("HX-Redirect"); got != "/" {
+		t.Errorf("want HX-Redirect: /, got %q", got)
+	}
+	projects, _ := database.ListProjects()
+	if len(projects) != 0 {
+		t.Error("want project deleted, but it still exists")
+	}
+}
+
+func TestDeleteProjectBlockedHTMX(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("Garden", "")
+	database.CreateTask(db.CreateTaskParams{
+		Title: "t", Status: models.StatusTodo,
+		Priority: models.PriorityLow, ProjectID: projectID, CreatedBy: userID,
+	})
+
+	req := httptest.NewRequest("POST", fmt.Sprintf("/projects/%d/delete", projectID), nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	req.Header.Set("HX-Request", "true")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("want 200 for HTMX blocked delete, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "Blocked") {
+		t.Errorf("want error content in body, got %q", w.Body.String())
+	}
+	projects, _ := database.ListProjects()
+	if len(projects) != 1 {
+		t.Error("project should still exist when delete is blocked")
+	}
+}

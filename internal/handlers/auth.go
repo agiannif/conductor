@@ -65,6 +65,7 @@ func (h *Handler) routes() *http.ServeMux {
 	mux.HandleFunc("GET /partials/tasks/{id}/delete-confirm", h.requireAuth(h.getTaskDeleteConfirm))
 	mux.HandleFunc("GET /partials/projects/new", h.requireAuth(h.getProjectForm))
 	mux.HandleFunc("GET /partials/projects/{id}/edit", h.requireAuth(h.getProjectEditForm))
+	mux.HandleFunc("GET /partials/projects/{id}/delete-confirm", h.requireAuth(h.getProjectDeleteConfirm))
 
 	// Static files + healthz
 	mux.HandleFunc("GET /healthz", h.getHealthz)

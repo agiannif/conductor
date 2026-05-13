@@ -28,18 +28,19 @@ templ ProjectForm(data ProjectFormData) {
 	<div class="px-5 py-4">
 		if data.Project != nil {
 			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/projects/%d", data.Project.ID)) } class="space-y-4">
-				@projectFormFields(data.Project.Name, data.Project.Description, true)
+				@projectFormFields(data.Project.Name, data.Project.Description, true, data.Project.ID)
 			</form>
 		} else {
 			<form method="POST" action="/projects" class="space-y-4">
-				@projectFormFields("", "", false)
+				@projectFormFields("", "", false, 0)
 			</form>
 		}
 	</div>
 }
 
 templ ProjectDeleteError(taskCount int) {
-	<div class="bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px] text-[13px] text-warning">
+	<h2 class="text-[15px] font-medium text-primary mb-2">Cannot delete project</h2>
+	<div class="bg-warning-container border border-warning-outline rounded-sm px-3 py-[10px] text-[13px] text-warning mb-6">
 		<span class="font-medium">Blocked.</span>
 		if taskCount == 1 {
 			This project has 1 task. Delete or reassign it first.
@@ -47,9 +48,42 @@ templ ProjectDeleteError(taskCount int) {
 			This project has { fmt.Sprint(taskCount) } tasks. Delete or reassign them first.
 		}
 	</div>
+	<div class="flex justify-end">
+		<button
+			@click="modalOpen = false"
+			class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
+		>
+			Got it
+		</button>
+	</div>
 }
 
-templ projectFormFields(name, description string, isEdit bool) {
+templ ProjectDeleteConfirm(project models.Project) {
+	<h2 class="text-[15px] font-medium text-primary mb-2">Delete this project?</h2>
+	<p class="text-[13px] text-secondary mb-6">
+		"{ project.Name }" will be permanently removed. This cannot be undone.
+	</p>
+	<div class="flex justify-end gap-2">
+		<button
+			@click="modalOpen = false"
+			class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
+		>
+			Cancel
+		</button>
+		<!-- No @click="modalOpen = false" here: on a conflict response the error HTML is swapped
+			 into #modal-content and the modal must stay open so the user can read it. -->
+		<button
+			hx-post={ templ.SafeURL(fmt.Sprintf("/projects/%d/delete", project.ID)) }
+			hx-target="#modal-content"
+			hx-swap="innerHTML"
+			class="px-3 py-[7px] text-[13px] bg-danger text-white rounded-md hover:opacity-90 font-medium"
+		>
+			Delete project
+		</button>
+	</div>
+}
+
+templ projectFormFields(name, description string, isEdit bool, projectID int64) {
 	<div>
 		<label for="name" class="block text-[13px] font-medium text-primary mb-1">Name <span class="text-danger">*</span></label>
 		<input
@@ -70,23 +104,43 @@ templ projectFormFields(name, description string, isEdit bool) {
 			class="w-full border border-outline rounded-sm px-[10px] py-[7px] text-[13px] text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-tertiary"
 		>{ description }</textarea>
 	</div>
-	<div class="flex justify-end gap-2 pt-2">
-		<button
-			type="button"
-			@click="drawerOpen = false"
-			class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
-		>
-			Cancel
-		</button>
-		<button
-			type="submit"
-			class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium"
-		>
-			if isEdit {
-				Save changes
-			} else {
-				Create project
-			}
-		</button>
+	<div class="flex items-center justify-between pt-2">
+		if isEdit && projectID > 0 {
+			<button
+				type="button"
+				hx-get={ templ.SafeURL(fmt.Sprintf("/partials/projects/%d/delete-confirm", projectID)) }
+				hx-target="#modal-content"
+				hx-swap="innerHTML"
+				@click="modalOpen = true"
+				class="flex items-center gap-1.5 text-[13px] text-danger hover:opacity-70"
+			>
+				<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="3 6 5 6 21 6"></polyline>
+					<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+				</svg>
+				Delete
+			</button>
+		} else {
+			<span></span>
+		}
+		<div class="flex gap-2">
+			<button
+				type="button"
+				@click="drawerOpen = false"
+				class="px-3 py-[7px] text-[13px] text-primary border border-outline rounded-md hover:bg-surface-sunken"
+			>
+				Cancel
+			</button>
+			<button
+				type="submit"
+				class="px-3 py-[7px] text-[13px] bg-tertiary text-white rounded-md hover:bg-tertiary-hover font-medium"
+			>
+				if isEdit {
+					Save changes
+				} else {
+					Create project
+				}
+			</button>
+		</div>
 	</div>
 }

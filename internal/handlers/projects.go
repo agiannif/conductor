@@ -95,12 +95,21 @@ func (h *Handler) postDeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if count > 0 {
+		if r.Header.Get("HX-Request") == "true" {
+			_ = templates.ProjectDeleteError(count).Render(r.Context(), w)
+			return
+		}
 		w.WriteHeader(http.StatusConflict)
 		_ = templates.ProjectDeleteError(count).Render(r.Context(), w)
 		return
 	}
 	if err := h.db.DeleteProject(id); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -124,6 +133,22 @@ func (h *Handler) getProjectEditForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := templates.ProjectForm(templates.ProjectFormData{Project: &project}).Render(r.Context(), w); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) getProjectDeleteConfirm(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	project, err := h.db.GetProject(id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if err := templates.ProjectDeleteConfirm(project).Render(r.Context(), w); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 }
