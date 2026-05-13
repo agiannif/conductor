@@ -4,6 +4,7 @@ set -euo pipefail
 INSTALL_PATH="/usr/local/bin/conductor"
 DATA_DIR="/var/lib/conductor"
 DEFAULTS_FILE="/etc/default/conductor"
+CADDYFILE="/etc/caddy/Caddyfile"
 SERVICE_FILE="/etc/systemd/system/conductor.service"
 SERVICE_USER="conductor"
 
@@ -32,6 +33,14 @@ if [ -f "$SERVICE_FILE" ]; then
     systemctl daemon-reload
 fi
 
+# ---- remove capability (if set) ---------------------------------------------
+# Explicitly revoke cap_net_bind_service before removing the binary so the
+# intent is clear, even though rm achieves the same effect.
+
+if [ -f "$INSTALL_PATH" ] && command -v setcap &>/dev/null; then
+    setcap -r "$INSTALL_PATH" 2>/dev/null || true
+fi
+
 # ---- remove binary ----------------------------------------------------------
 
 if [ -f "$INSTALL_PATH" ]; then
@@ -51,6 +60,16 @@ fi
 if [ -d "$DATA_DIR" ]; then
     rm -rf "$DATA_DIR"
     echo "Removed $DATA_DIR"
+fi
+
+# ---- caddy config -----------------------------------------------------------
+
+if [ -f "$CADDYFILE" ]; then
+    rm "$CADDYFILE"
+    echo "Removed $CADDYFILE"
+    if systemctl is-active --quiet caddy 2>/dev/null; then
+        systemctl reload caddy 2>/dev/null || true
+    fi
 fi
 
 # ---- system user ------------------------------------------------------------

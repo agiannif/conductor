@@ -11,12 +11,14 @@ var defaultsFilePath = "/etc/default/conductor"
 type Config struct {
 	DBPath       string
 	SecureCookie bool
+	ListenAddr   string
 }
 
 func Load() Config {
 	cfg := Config{
 		DBPath:       "/data/conductor.db",
 		SecureCookie: true,
+		ListenAddr:   ":8080",
 	}
 
 	defaults := readDefaultsFile(defaultsFilePath)
@@ -31,6 +33,12 @@ func Load() Config {
 		cfg.SecureCookie = false
 	} else if defaults["CONDUCTOR_SECURE_COOKIE"] == "false" {
 		cfg.SecureCookie = false
+	}
+
+	if v := os.Getenv("CONDUCTOR_LISTEN_ADDR"); v != "" {
+		cfg.ListenAddr = v
+	} else if v := defaults["CONDUCTOR_LISTEN_ADDR"]; v != "" {
+		cfg.ListenAddr = v
 	}
 
 	return cfg

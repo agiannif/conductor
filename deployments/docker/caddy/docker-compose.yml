@@ -1,0 +1,31 @@
+services:
+  conductor:
+    image: ghcr.io/agiannif/conductor:latest
+    volumes:
+      - conductor_data:/data
+    environment:
+      - CONDUCTOR_SECURE_COOKIE=true
+      - CONDUCTOR_DB_PATH=/data/conductor.db
+    restart: unless-stopped
+    # No ports published — only reachable from Caddy on the internal network.
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - conductor
+    restart: unless-stopped
+
+volumes:
+  conductor_data:
+  caddy_data:
+  caddy_config:

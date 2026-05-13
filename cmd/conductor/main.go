@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -32,8 +33,8 @@ func main() {
 	defer database.Close()
 
 	h := handlers.New(database, cfg.SecureCookie, conductorweb.Static)
-	fmt.Println("conductor listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", h))
+	fmt.Printf("conductor listening on %s\n", cfg.ListenAddr)
+	log.Fatal(http.ListenAndServe(cfg.ListenAddr, h))
 }
 
 func runCLI(args []string) {
@@ -50,8 +51,13 @@ func runCLI(args []string) {
 	}
 	switch args[0] {
 	case "healthz":
+		cfg := config.Load()
+		_, port, err := net.SplitHostPort(cfg.ListenAddr)
+		if err != nil {
+			port = "8080"
+		}
 		client := &http.Client{Timeout: 3 * time.Second}
-		resp, err := client.Get("http://localhost:8080/healthz")
+		resp, err := client.Get(fmt.Sprintf("http://localhost:%s/healthz", port))
 		if err != nil || resp.StatusCode != http.StatusOK {
 			os.Exit(1)
 		}

@@ -63,13 +63,14 @@ func TestReadDefaultsFileMissing(t *testing.T) {
 func TestLoadFromDefaultsFile(t *testing.T) {
 	os.Unsetenv("CONDUCTOR_DB_PATH")
 	os.Unsetenv("CONDUCTOR_SECURE_COOKIE")
+	os.Unsetenv("CONDUCTOR_LISTEN_ADDR")
 	t.Cleanup(func() { defaultsFilePath = "/etc/default/conductor" })
 
 	f, err := os.CreateTemp(t.TempDir(), "defaults")
 	if err != nil {
 		t.Fatal(err)
 	}
-	f.WriteString("CONDUCTOR_DB_PATH=/srv/conductor.db\nCONDUCTOR_SECURE_COOKIE=false\n")
+	f.WriteString("CONDUCTOR_DB_PATH=/srv/conductor.db\nCONDUCTOR_SECURE_COOKIE=false\nCONDUCTOR_LISTEN_ADDR=127.0.0.1:8080\n")
 	f.Close()
 
 	defaultsFilePath = f.Name()
@@ -80,6 +81,9 @@ func TestLoadFromDefaultsFile(t *testing.T) {
 	}
 	if cfg.SecureCookie {
 		t.Error("want SecureCookie=false from defaults file")
+	}
+	if cfg.ListenAddr != "127.0.0.1:8080" {
+		t.Errorf("got ListenAddr %q, want 127.0.0.1:8080", cfg.ListenAddr)
 	}
 }
 
