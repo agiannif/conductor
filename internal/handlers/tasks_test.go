@@ -50,6 +50,34 @@ func TestCreateTask(t *testing.T) {
 	}
 }
 
+func TestCreateTaskWithReferer(t *testing.T) {
+	h, database := newTestHandler(t)
+	userID, _ := database.CreateUser("alice", "pw")
+	token, _ := database.CreateSession(userID)
+	projectID, _ := database.CreateProject("My Project", "")
+
+	form := url.Values{
+		"title":      {"Fix login"},
+		"project_id": {fmt.Sprint(projectID)},
+		"status":     {"todo"},
+		"priority":   {"medium"},
+	}
+	req := httptest.NewRequest("POST", "/tasks", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Referer", "http://example.com/")
+	req.AddCookie(&http.Cookie{Name: "session", Value: token})
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusSeeOther {
+		t.Errorf("want 303, got %d", w.Code)
+	}
+	// Only the path should be used — scheme and host are stripped to prevent open redirect.
+	if got := w.Header().Get("Location"); got != "/" {
+		t.Errorf("want redirect to Referer path %q, got %q", "/", got)
+	}
+}
+
 func TestToggleTask(t *testing.T) {
 	h, database := newTestHandler(t)
 	userID, _ := database.CreateUser("alice", "pw")

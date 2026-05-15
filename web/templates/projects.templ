@@ -15,7 +15,7 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 					hx-target="#drawer-inner"
 					hx-swap="innerHTML"
 					@click="drawerOpen = true"
-					class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1"
+					class="bg-tertiary text-white px-3 py-[7px] rounded-md text-[13px] font-medium hover:bg-tertiary-hover flex items-center gap-1 whitespace-nowrap"
 				>
 					+ Create project
 				</button>
@@ -88,7 +88,7 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 templ projectCard(p models.Project, filters models.TaskFilters) {
 	<div
 		class="bg-surface border border-outline rounded"
-		x-data="{ open: false }"
+		x-data={ fmt.Sprintf(`{ open: $persist(false).as('project-%d-open') }`, p.ID) }
 		@projects-toggle-all.window="open = $event.detail.open"
 	>
 		<button

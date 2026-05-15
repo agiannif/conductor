@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,20 @@ import (
 	"conductor/web/templates"
 	"github.com/a-h/templ"
 )
+
+// refererPath returns only the path+query from the Referer header, discarding
+// scheme and host to prevent open redirect to external URLs.
+func refererPath(r *http.Request) string {
+	ref := r.Header.Get("Referer")
+	if ref == "" {
+		return ""
+	}
+	u, err := url.Parse(ref)
+	if err != nil {
+		return ""
+	}
+	return u.RequestURI()
+}
 
 func (h *Handler) getAllTasks(w http.ResponseWriter, r *http.Request) {
 	filters := parseTaskFilters(r)
@@ -86,7 +101,11 @@ func (h *Handler) postCreateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/projects/%d", projectID), http.StatusSeeOther)
+	dest := refererPath(r)
+	if dest == "" {
+		dest = fmt.Sprintf("/projects/%d", projectID)
+	}
+	http.Redirect(w, r, dest, http.StatusSeeOther)
 }
 
 func (h *Handler) postUpdateTask(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +151,7 @@ func (h *Handler) postUpdateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	dest := r.Header.Get("Referer")
+	dest := refererPath(r)
 	if dest == "" {
 		dest = fmt.Sprintf("/projects/%d", task.ProjectID)
 	}
