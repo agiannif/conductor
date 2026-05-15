@@ -119,10 +119,10 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 			</div>
 			<!-- Desktop stats -->
 			<div class="hidden sm:flex items-center gap-3">
-				<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">
+				<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5">
 					{ fmt.Sprint(p.OpenTasks()) } open
 				</span>
-				<span class="text-[11px] text-secondary bg-surface-sunken border border-outline-hair rounded-full px-2 leading-5">
+				<span class="text-[11px] text-secondary bg-surface border border-outline rounded-full px-2 leading-5">
 					{ fmt.Sprint(p.TotalTasks) } total
 				</span>
 				<div class="w-20 bg-outline rounded-full h-[3px] flex-shrink-0">
