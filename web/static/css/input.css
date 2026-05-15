@@ -33,3 +33,8 @@
 
 /* Hide Alpine x-cloak elements until Alpine initialises */
 [x-cloak] { display: none !important; }
+
+/* Prevent iOS Safari from zooming on input focus (requires font-size >= 16px) */
+@media (max-width: 639px) {
+  input, textarea, select { font-size: 16px; }
+}

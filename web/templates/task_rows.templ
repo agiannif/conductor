@@ -41,7 +41,7 @@ templ taskRowFull(t models.Task) {
 		<input
 			type="checkbox"
 			checked?={ t.Status == models.StatusDone }
-			hx-post={ fmt.Sprintf("/tasks/%d/toggle", t.ID) }
+			hx-post={ fmt.Sprintf("/tasks/%d/toggle?project_id=%d", t.ID, t.ProjectID) }
 			hx-target={ fmt.Sprintf("#task-%d", t.ID) }
 			hx-swap="outerHTML"
 			class="w-4 h-4 rounded-[3px] border-outline accent-tertiary flex-shrink-0"
@@ -207,6 +207,15 @@ templ myTaskRow(t models.Task) {
 				}
 			</div>
 		</div>
+	</div>
+}
+
+// TaskRowsOOB replaces the home-page project card task list after a toggle so the list re-sorts.
+templ TaskRowsOOB(projectID int64, tasks []models.Task) {
+	<div id={ fmt.Sprintf("project-%d-tasks", projectID) } hx-swap-oob="innerHTML">
+		for _, t := range tasks {
+			@taskRowFull(t)
+		}
 	</div>
 }
 

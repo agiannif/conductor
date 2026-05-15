@@ -29,6 +29,7 @@ func refererPath(r *http.Request) string {
 	return u.RequestURI()
 }
 
+
 func (h *Handler) getAllTasks(w http.ResponseWriter, r *http.Request) {
 	filters := parseTaskFilters(r)
 	tasks, err := h.db.ListTasks(filters)
@@ -203,13 +204,31 @@ func (h *Handler) postToggleTask(w http.ResponseWriter, r *http.Request) {
 	}
 	// On the project detail page, replace the stats and task groups wholesale
 	// so the progress bar and section positions update atomically.
+	// Preserve any active filters from the page URL via HX-Current-URL.
 	if projectID := projectPageID(r); projectID != 0 {
 		project, _ := h.db.GetProject(projectID)
-		tasks, _ := h.db.ListTasks(models.TaskFilters{ProjectID: projectID})
+		filters := filtersFromCurrentURL(r)
+		filters.ProjectID = projectID
+		tasks, _ := h.db.ListTasks(filters)
 		w.Header().Set("HX-Reswap", "none")
 		_ = templates.TaskDetailOOB(task).Render(r.Context(), w)
 		_ = templates.ProjectStatsOOB(project).Render(r.Context(), w)
 		_ = templates.ProjectTaskGroupsOOB(tasks).Render(r.Context(), w)
+		user := currentUser(r)
+		count, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID, ExcludeDone: true})
+		_ = templates.SidebarMyTaskCountOOB(count).Render(r.Context(), w)
+		return
+	}
+	// On the home page, refresh the project card's task list so it re-sorts after a toggle.
+	// Covers both the task-row checkbox (which carries ?project_id) and the detail-pane
+	// checkbox (which doesn't). task.ProjectID is always available from the DB fetch above.
+	if isHomePage(r) {
+		filters := filtersFromCurrentURL(r)
+		filters.ProjectID = task.ProjectID
+		tasks, _ := h.db.ListTasks(filters)
+		w.Header().Set("HX-Reswap", "none")
+		_ = templates.TaskDetailOOB(task).Render(r.Context(), w)
+		_ = templates.TaskRowsOOB(task.ProjectID, tasks).Render(r.Context(), w)
 		user := currentUser(r)
 		count, _ := h.db.CountTasks(models.TaskFilters{AssigneeID: user.ID, ExcludeDone: true})
 		_ = templates.SidebarMyTaskCountOOB(count).Render(r.Context(), w)
@@ -353,6 +372,45 @@ func (h *Handler) getTaskDeleteConfirm(w http.ResponseWriter, r *http.Request) {
 	if err := templates.TaskDeleteConfirm(task).Render(r.Context(), w); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
+}
+
+// isHomePage reports whether the request originated from the home page (/).
+func isHomePage(r *http.Request) bool {
+	cu := r.Header.Get("HX-Current-URL")
+	if cu == "" {
+		return false
+	}
+	u, err := url.Parse(cu)
+	if err != nil {
+		return false
+	}
+	return u.Path == "/"
+}
+
+// filtersFromCurrentURL parses filter params from the HX-Current-URL header.
+// HTMX includes this header on every request, so it reliably reflects the active
+// filters even when the toggle POST URL itself carries no filter params.
+func filtersFromCurrentURL(r *http.Request) models.TaskFilters {
+	cu := r.Header.Get("HX-Current-URL")
+	if cu == "" {
+		return models.TaskFilters{}
+	}
+	u, err := url.Parse(cu)
+	if err != nil {
+		return models.TaskFilters{}
+	}
+	q := u.Query()
+	f := models.TaskFilters{}
+	if s := q.Get("assignee_id"); s != "" {
+		if id, err := strconv.ParseInt(s, 10, 64); err == nil {
+			f.AssigneeID = id
+		}
+	}
+	f.Priority = q.Get("priority")
+	f.Due = q.Get("due")
+	f.Status = q.Get("status")
+	f.Category = q.Get("category")
+	return f
 }
 
 // parseTaskFilters reads common task filter query/form parameters.

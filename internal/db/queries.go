@@ -418,6 +418,7 @@ func (d *DB) ListTasks(f models.TaskFilters) ([]models.Task, error) {
 		LEFT JOIN users u ON u.id = t.created_by
 		WHERE %s
 		ORDER BY
+			CASE t.status WHEN 'done' THEN 1 ELSE 0 END,
 			CASE WHEN t.due_date IS NULL THEN 1 ELSE 0 END,
 			t.due_date ASC,
 			%s

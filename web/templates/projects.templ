@@ -23,23 +23,23 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 			<!-- Toolbar: expand all + filter -->
 			<div
 				x-data="{ allExpanded: false }"
-				class="hidden sm:flex items-center gap-3 mb-4 flex-wrap"
+				class="flex items-center gap-2 sm:gap-3 mb-4 flex-wrap"
 			>
 				<button
 					@click="allExpanded = !allExpanded; $dispatch('projects-toggle-all', { open: allExpanded })"
-					class="text-[13px] text-secondary hover:text-primary"
+					class="text-xs sm:text-[13px] text-secondary hover:text-primary whitespace-nowrap"
 					x-text="allExpanded ? 'Collapse all' : 'Expand all'"
 				>
 					Expand all
 				</button>
-				<span class="text-on-surface-muted text-[13px]">·</span>
-				<form method="GET" action="/" class="flex items-center gap-2">
+				<span class="text-on-surface-muted text-xs sm:text-[13px]">·</span>
+				<form method="GET" action="/" class="flex items-center gap-1 sm:gap-2">
 					<select
 						name="assignee_id"
 						@change="$el.form.submit()"
-						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+						class="w-[68px] sm:w-auto text-xs sm:text-[13px] border border-outline rounded-sm px-1 sm:px-2 py-0.5 sm:py-1 bg-surface text-secondary"
 					>
-						<option value="">All Assignees</option>
+						<option value="">Assignee</option>
 						for _, u := range users {
 							if filters.AssigneeID == u.ID {
 								<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
@@ -51,9 +51,9 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 					<select
 						name="priority"
 						@change="$el.form.submit()"
-						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+						class="w-[68px] sm:w-auto text-xs sm:text-[13px] border border-outline rounded-sm px-1 sm:px-2 py-0.5 sm:py-1 bg-surface text-secondary"
 					>
-						<option value="">All Priorities</option>
+						<option value="">Priority</option>
 						@projectsFilterOption("critical", "Critical", filters.Priority)
 						@projectsFilterOption("high", "High", filters.Priority)
 						@projectsFilterOption("medium", "Medium", filters.Priority)
@@ -62,14 +62,14 @@ templ Projects(layout LayoutData, projects []models.Project, users []models.User
 					<select
 						name="due"
 						@change="$el.form.submit()"
-						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+						class="w-[68px] sm:w-auto text-xs sm:text-[13px] border border-outline rounded-sm px-1 sm:px-2 py-0.5 sm:py-1 bg-surface text-secondary"
 					>
-						<option value="">All Due Dates</option>
+						<option value="">Due</option>
 						@projectsFilterOption("overdue", "Overdue", filters.Due)
 						@projectsFilterOption("this_week", "This week", filters.Due)
 					</select>
 					if filters.AssigneeID != 0 || filters.Priority != "" || filters.Due != "" {
-						<a href="/" class="text-[13px] text-secondary hover:text-primary">Clear</a>
+						<a href="/" class="text-xs sm:text-[13px] text-secondary hover:text-primary">Clear</a>
 					}
 				</form>
 			</div>
@@ -134,6 +134,7 @@ templ projectCard(p models.Project, filters models.TaskFilters) {
 		</button>
 		<div x-show="open" x-cloak>
 			<div
+				id={ fmt.Sprintf("project-%d-tasks", p.ID) }
 				hx-get={ fmt.Sprintf("/partials/tasks?project_id=%d%s", p.ID, projectsFiltersQuery(filters)) }
 				hx-trigger="intersect once"
 				class="divide-y divide-outline-hair border-t border-outline-hair min-h-[1px]"

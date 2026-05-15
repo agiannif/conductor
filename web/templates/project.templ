@@ -15,14 +15,14 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 				<span class="text-primary">{ project.Name }</span>
 			</nav>
 			<!-- Title + actions -->
-			<div class="flex items-start justify-between mb-4">
+			<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
 				<div>
 					<h1 class="text-[26px] font-normal tracking-[-0.3px] text-primary">{ project.Name }</h1>
 					if project.Description != "" {
 						<p class="text-[13px] text-secondary mt-0.5">{ project.Description }</p>
 					}
 				</div>
-				<div class="flex items-center gap-2 mt-1">
+				<div class="flex items-center gap-2 mt-2 sm:mt-1 sm:flex-shrink-0">
 					<button
 						hx-get={ fmt.Sprintf("/partials/projects/%d/delete-confirm", project.ID) }
 						hx-target="#modal-content"
@@ -61,7 +61,7 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 				</div>
 			</div>
 			<!-- Progress bar + summary + filter dropdowns -->
-			<div class="flex items-center gap-3 mb-7 px-4 py-3 bg-surface border border-outline rounded">
+			<div class="flex flex-wrap items-center gap-3 mb-7 px-4 py-3 bg-surface border border-outline rounded">
 				<div id="project-stats" class="flex items-center gap-3">
 					<div class="w-28 bg-outline rounded-full h-[3px] flex-shrink-0">
 						<div class="bg-tertiary h-[3px] rounded-full" style={ fmt.Sprintf("width:%d%%", project.ProgressPct()) }></div>
@@ -73,14 +73,14 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 				<form
 					method="GET"
 					action={ templ.SafeURL(fmt.Sprintf("/projects/%d", project.ID)) }
-					class="ml-auto hidden sm:flex items-center gap-2"
+					class="w-full sm:w-auto sm:ml-auto flex items-center gap-1 sm:gap-2"
 				>
 					<select
 						name="assignee_id"
 						@change="$el.form.submit()"
-						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+						class="flex-1 sm:flex-none sm:w-auto text-xs sm:text-[13px] border border-outline rounded-sm px-1 sm:px-2 py-0.5 sm:py-1 bg-surface text-secondary"
 					>
-						<option value="">All Assignees</option>
+						<option value="">Assignee</option>
 						for _, u := range users {
 							if filters.AssigneeID == u.ID {
 								<option value={ fmt.Sprint(u.ID) } selected>{ u.Username }</option>
@@ -92,9 +92,9 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 					<select
 						name="priority"
 						@change="$el.form.submit()"
-						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+						class="flex-1 sm:flex-none sm:w-auto text-xs sm:text-[13px] border border-outline rounded-sm px-1 sm:px-2 py-0.5 sm:py-1 bg-surface text-secondary"
 					>
-						<option value="">All Priorities</option>
+						<option value="">Priority</option>
 						@projectFilterOption("critical", "Critical", filters.Priority)
 						@projectFilterOption("high", "High", filters.Priority)
 						@projectFilterOption("medium", "Medium", filters.Priority)
@@ -103,9 +103,9 @@ templ Project(layout LayoutData, project models.Project, tasks []models.Task, us
 					<select
 						name="due"
 						@change="$el.form.submit()"
-						class="text-[13px] border border-outline rounded-sm px-2 py-1 bg-surface text-secondary"
+						class="flex-1 sm:flex-none sm:w-auto text-xs sm:text-[13px] border border-outline rounded-sm px-1 sm:px-2 py-0.5 sm:py-1 bg-surface text-secondary"
 					>
-						<option value="">All Due Dates</option>
+						<option value="">Due</option>
 						@projectFilterOption("overdue", "Overdue", filters.Due)
 						@projectFilterOption("this_week", "This week", filters.Due)
 					</select>
