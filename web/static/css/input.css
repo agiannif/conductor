@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Inter';
+  src: url('/static/fonts/inter-variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
   --color-primary: #1c1a17;
-  --color-secondary: #78746e;
+  --color-secondary: #6b6762;
   --color-tertiary: #3f6b5d;
   --color-tertiary-hover: #2f5a4d;
   --color-tertiary-container: #ecf2ef;
@@ -11,7 +21,7 @@
   --color-surface-sunken: #f5f5f4;
   --color-outline: #e7e5e4;
   --color-outline-hair: #efede9;
-  --color-on-surface-muted: #a8a29a;
+  --color-on-surface-muted: #6f6a65;
   --color-warning: #8a6b20;
   --color-warning-container: #fbf3e4;
   --color-warning-outline: #ecddb8;

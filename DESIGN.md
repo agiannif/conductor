@@ -4,7 +4,7 @@ name: Conductor
 description: A calm, paper-textured task manager for households. Light gray chrome, hairline borders, a single forest-green accent for action and progress.
 colors:
   primary: "#1c1a17"
-  secondary: "#78746e"
+  secondary: "#6b6762"
   tertiary: "#3f6b5d"
   tertiary-hover: "#2f5a4d"
   tertiary-container: "#ecf2ef"
@@ -13,7 +13,7 @@ colors:
   surface-sunken: "#f5f5f4"
   outline: "#e7e5e4"
   outline-hair: "#efede9"
-  on-surface-muted: "#a8a29a"
+  on-surface-muted: "#6f6a65"
   warning: "#8a6b20"
   warning-container: "#fbf3e4"
   warning-outline: "#ecddb8"
@@ -194,7 +194,7 @@ The design avoids enterprise tropes: no heavy headers, no avatar clusters, no ba
 The palette is built around a warm-neutral surface stack, a single accent for action, and a small set of muted state colors. Saturation is intentionally low.
 
 - **Primary `#1c1a17` — Ink.** The darkest value, used for headlines, body text on light backgrounds, and the dark scrim on modals. Never used as a fill behind text.
-- **Secondary `#78746e` — Stone.** Metadata, captions, inactive labels, secondary icon strokes. Pairs with primary on neutral backgrounds.
+- **Secondary `#6b6762` — Stone.** Metadata, captions, inactive labels, secondary icon strokes. Pairs with primary on neutral backgrounds.
 - **Tertiary `#3f6b5d` — Forest.** The single accent. Used for primary buttons, progress bars (when work is happening), checked checkboxes, and links inside panels. Never decorative — every appearance signals action or progress.
 - **Tertiary container `#ecf2ef`.** The wash behind active filter chips and selected task rows. The lightest possible echo of forest.
 - **Neutral `#fafafa` — Page.** The app background. Slightly warm so it does not read as gray-blue.
@@ -202,7 +202,7 @@ The palette is built around a warm-neutral surface stack, a single accent for ac
 - **Surface sunken `#f5f5f4` — Tray.** The sidebar, project header rows, the nav rest state. One step below the page in elevation feel, even though it is technically lighter than `surface` in some contexts — the sunken feel comes from the hairline boundary.
 - **Outline `#e7e5e4` — Edge.** Card borders, sidebar boundary, input borders. The strongest divider in the system, and still very quiet.
 - **Outline hair `#efede9` — Rule.** Internal dividers between sections inside a card; column underlines. Should disappear at arm's length.
-- **On-surface muted `#a8a29a` — Whisper.** Disabled icon strokes, count numerals beside nav items, "no data" copy.
+- **On-surface muted `#6f6a65` — Whisper.** Disabled icon strokes, count numerals beside nav items, "no data" copy.
 - **Warning `#8a6b20` on `#fbf3e4`.** "In progress" pills, the new-category confirmation callout, the project-blocked notice. Mustard, never orange.
 - **Success `#2f5a4d` on `#eaf1ee`.** "Done" pills only. A deeper, less saturated forest than the accent.
 - **Danger `#a13f3f` — Brick.** Overdue dates, destructive button fills, delete actions.
