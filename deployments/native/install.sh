@@ -87,6 +87,13 @@ case "$MODE" in
         ;;
 esac
 
+# ---- stop existing service (upgrade path) -----------------------------------
+
+if systemctl is-active --quiet conductor 2>/dev/null; then
+    echo "Stopping conductor service for upgrade..."
+    systemctl stop conductor
+fi
+
 # ---- download binary --------------------------------------------------------
 
 echo ""
